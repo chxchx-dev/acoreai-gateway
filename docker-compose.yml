@@ -1,0 +1,236 @@
+x-postgres-resources: &postgres-resources
+  cpus: "${POSTGRES_CPUS:-0.75}"
+  mem_limit: "${POSTGRES_MEM_LIMIT:-1536m}"
+  mem_reservation: "${POSTGRES_MEM_RESERVATION:-1024m}"
+
+x-mongodb-resources: &mongodb-resources
+  cpus: "${MONGODB_CPUS:-0.50}"
+  mem_limit: "${MONGODB_MEM_LIMIT:-1024m}"
+  mem_reservation: "${MONGODB_MEM_RESERVATION:-768m}"
+
+x-ollama-resources: &ollama-resources
+  # Sin límite de CPU: Ollama debe poder usar todos los cores disponibles.
+  # Ollama puede usar hasta 11 GiB de RAM y, bajo presión, hasta 4 GiB de swap.
+  mem_limit: "${OLLAMA_MEM_LIMIT:-11g}"
+  memswap_limit: "${OLLAMA_MEMSWAP_LIMIT:-15g}"
+  mem_reservation: "${OLLAMA_MEM_RESERVATION:-9g}"
+
+x-tts-resources: &tts-resources
+  # Sin límite de CPU para acelerar la generación de audio.
+  mem_limit: "${TTS_MEM_LIMIT:-2048m}"
+  mem_reservation: "${TTS_MEM_RESERVATION:-1536m}"
+
+x-stt-resources: &stt-resources
+  # Sin límite de CPU para acelerar la transcripción.
+  mem_limit: "${STT_MEM_LIMIT:-2560m}"
+  mem_reservation: "${STT_MEM_RESERVATION:-2048m}"
+
+x-gateway-resources: &gateway-resources
+  # Sin límite de CPU para evitar que el gateway bloquee streams o solicitudes.
+  mem_limit: "${GATEWAY_MEM_LIMIT:-512m}"
+  mem_reservation: "${GATEWAY_MEM_RESERVATION:-384m}"
+
+x-alania-web-resources: &alania-web-resources
+  cpus: "${ALANIA_WEB_CPUS:-0.50}"
+  mem_limit: "${ALANIA_WEB_MEM_LIMIT:-512m}"
+  mem_reservation: "${ALANIA_WEB_MEM_RESERVATION:-384m}"
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    container_name: olan-ai-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    command: ["postgres", "-c", "port=5438"]
+    ports:
+      - "127.0.0.1:5438:5438"
+    volumes:
+      - olan_ai_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER is required} -d ${POSTGRES_DB:?POSTGRES_DB is required} -p 5438",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    <<: *postgres-resources
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: olan-ai-mongodb
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - olan_ai_mongodb_data:/data/db
+    healthcheck:
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+    <<: *mongodb-resources
+    restart: unless-stopped
+
+  ollama:
+    build:
+      context: ./docker/ollama
+      dockerfile: Dockerfile
+    container_name: olan-ollama
+    expose:
+      - "11434"
+    volumes:
+      - olan_ollama_data:/models
+      - olan_ollama_home:/home/ollama/.ollama
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "ollama list >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    <<: *ollama-resources
+    restart: unless-stopped
+
+  tts-service:
+    build:
+      context: ./services/tts
+      dockerfile: Dockerfile
+    container_name: olan-tts
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/olan_ai_gateway}
+      MONGODB_DB: ${MONGODB_DB:-olan_ai_gateway}
+    volumes:
+      - olan_tts_cache:/home/app/.cache
+      - olan_tts_audio:/app/tts_cache
+    ports:
+      - "127.0.0.1:8880:8880"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8880/health'')"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    <<: *tts-resources
+    restart: unless-stopped
+
+  stt-service:
+    build:
+      context: ./services/stt
+      dockerfile: Dockerfile
+    container_name: olan-stt
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-medium}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
+    volumes:
+      - olan_stt_cache:/home/app/.cache/huggingface
+    ports:
+      - "127.0.0.1:9000:9000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:9000/health'')"',
+        ]
+      interval: 30s
+      timeout: 15s
+      retries: 10
+      start_period: 300s
+    <<: *stt-resources
+    restart: unless-stopped
+
+  olan-ai-gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile
+    container_name: olan-ai-gateway
+    env_file:
+      - .env
+    ports:
+      # El acceso público debe pasar por Nginx, que termina TLS.
+      - "127.0.0.1:4005:4005"
+    depends_on:
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      tts-service:
+        condition: service_healthy
+      stt-service:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      AI_GATEWAY_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_ISSUER: ${JWT_ISSUER:?JWT_ISSUER is required}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:?JWT_AUDIENCE is required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL is required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      ADMIN_NAME: ${ADMIN_NAME:?ADMIN_NAME is required}
+      # Servidor del modelo externo — nunca corre en este compose.
+      # Compatibilidad: si vienes de un .env antiguo, usa OLLAMA_BASE_URL como alias.
+      MODEL_SERVER_URL: ${MODEL_SERVER_URL:-${OLLAMA_BASE_URL:?MODEL_SERVER_URL or OLLAMA_BASE_URL is required}}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/olan_ai_gateway}
+      MONGODB_DB: ${MONGODB_DB:-olan_ai_gateway}
+      TTS_SERVICE_URL: ${TTS_SERVICE_URL:-http://tts-service:8880}
+      STT_SERVICE_URL: ${STT_SERVICE_URL:-http://stt-service:9000}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "fetch(''http://localhost:4005/health/ready'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    <<: *gateway-resources
+    restart: unless-stopped
+
+  # ── Plataforma Alania ────────────────────────────────────────────────────────
+  alania-web:
+    build:
+      context: ./web/alania
+      dockerfile: Dockerfile
+    container_name: alania-web
+    env_file:
+      - .env
+    depends_on:
+      olan-ai-gateway:
+        condition: service_healthy
+    environment:
+      AI_GATEWAY_INTERNAL_URL: http://olan-ai-gateway:4005
+      AI_GATEWAY_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
+    ports:
+      - "127.0.0.1:5175:8080"
+    <<: *alania-web-resources
+    restart: unless-stopped
+
+  # olan-web se despliega en servidor independiente — no corre en este compose.
+
+volumes:
+  olan_ai_postgres_data:
+  olan_ai_mongodb_data:
+  olan_ollama_data:
+  olan_ollama_home:
+  olan_tts_cache:
+  olan_tts_audio:
+  olan_stt_cache:

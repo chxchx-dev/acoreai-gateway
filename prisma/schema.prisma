@@ -1,0 +1,904 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AiDocument {
+  id        String   @id @default(uuid())
+  title     String
+  type      String   @default("text")
+  source    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chunks AiDocumentChunk[]
+}
+
+model AiDocumentChunk {
+  id          String   @id @default(uuid())
+  documentId  String
+  chunkIndex  Int
+  content     String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  document AiDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  embedding AiDocumentEmbedding?
+
+  @@index([documentId])
+  @@unique([documentId, chunkIndex])
+}
+
+model AiDocumentEmbedding {
+  id         String   @id @default(uuid())
+  chunkId    String   @unique
+  model      String
+  dimensions Int
+  embedding  Unsupported("vector(768)")
+  createdAt  DateTime @default(now())
+
+  chunk AiDocumentChunk @relation(fields: [chunkId], references: [id], onDelete: Cascade)
+
+  @@index([model])
+  @@index([dimensions])
+}
+
+enum UserRole {
+  FREE
+  ACADEMIC
+  PLUS
+  ADMIN
+  APP
+}
+
+model User {
+  id                   String        @id @default(cuid())
+  email                String        @unique
+  passwordHash         String
+  name                 String
+  role                 UserRole      @default(FREE)
+  knowledgeRole        KnowledgeRole?
+  resetTokenHash       String?
+  resetTokenExpiresAt  DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  authSessions AuthSession[]
+
+  @@index([email])
+}
+
+// Rol dentro del Centro de Conocimiento (RAG supervisado), independiente del
+// UserRole general de la plataforma. Un User con role=ADMIN sigue teniendo
+// acceso total (equivalente a SUPER_ADMIN) sin necesidad de setear este campo.
+enum KnowledgeRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  KNOWLEDGE_SUPERVISOR
+  KNOWLEDGE_UPLOADER
+  AUDITOR
+  CHAT_USER
+}
+
+model AuthSession {
+  id               String    @id @default(uuid())
+  userId           String
+  refreshTokenHash String
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deviceId         String?
+  deviceName       String?
+  platform         String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+// Bloqueo de un solo dispositivo activo por usuario para el uso de la IA
+// (chat/conversaciones/traducción móvil). Una fila por userId: el dispositivo
+// que la posee es el único autorizado hasta que se libere por logout.
+model UserDevice {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  deviceId   String
+  deviceName String?
+  platform   String?
+  claimedAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([deviceId])
+}
+
+model AiConversation {
+  id                       String   @id @default(uuid())
+  userId                   String?
+  source                   String?
+  title                    String?
+  status                   String   @default("active")
+  summary                  String?
+  summaryUpdatedAt          DateTime?
+  summarizedMessageCount    Int      @default(0)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  messages AiConversationMessage[]
+
+  @@index([userId, updatedAt])
+  @@index([source, updatedAt])
+  @@index([status, updatedAt])
+}
+
+model AiConversationMessage {
+  id             String   @id @default(uuid())
+  conversationId String
+  role           String
+  content        String
+  model          String?
+  status         String   @default("saved")
+  errorMessage   String?
+  sources        Json?
+  chunksUsed     Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  conversation AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([role])
+  @@index([status])
+}
+
+model AiChatLog {
+  id             String   @id @default(uuid())
+  userId         String?
+  conversationId String?
+  source         String?
+  question       String
+  answer         String?
+  model          String
+  status         String
+  errorMessage   String?
+  durationMs     Int?
+  chunksUsed     Int      @default(0)
+  sources        Json?
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([conversationId])
+}
+
+model TranslationSave {
+  id           String   @id @default(uuid())
+  userId       String
+  title        String
+  text         String
+  translations Json
+  langs        Json
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model AiUserProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  preferredMode       String
+  mainGoal            String
+  englishLevel        String
+  interestTopics      String[]
+  correctionStyle     String
+  practiceStyle       String
+  onboardingCompleted Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum LanguageCode {
+  EN
+  FR
+  PT
+}
+
+enum LanguageProfileStatus {
+  ACTIVE
+  PAUSED
+  RESET
+}
+
+enum AdventurePhaseStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  LOCKED
+  ARCHIVED
+}
+
+enum AdventureLessonType {
+  LESSON
+  PRACTICE
+  SPEAKING
+  LISTENING
+  REVIEW
+  HIDDEN
+}
+
+enum LessonProgressStatus {
+  LOCKED
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+  NEEDS_REVIEW
+}
+
+enum ExamType {
+  PRE_TEST
+  MIDTERM
+  FINAL_EXAM
+}
+
+enum ExamStatus {
+  LOCKED
+  AVAILABLE
+  PASSED
+  FAILED
+  BLOCKED_REVIEW_REQUIRED
+}
+
+enum XpSourceType {
+  LESSON
+  EXAM
+  HIDDEN_LEVEL
+  MANUAL_ADJUSTMENT
+}
+
+enum TitleUnlockSource {
+  LEVEL
+  ACHIEVEMENT
+  HIDDEN_LEVEL
+  STREAK
+  ADMIN
+}
+
+model LanguageProfile {
+  id              String                @id @default(cuid())
+  userId          String
+  languageCode    LanguageCode          @default(EN)
+  status          LanguageProfileStatus @default(ACTIVE)
+  currentLevel    Int                   @default(1)
+  currentXp       Int                   @default(0)
+  totalXp         Int                   @default(0)
+  selectedTitleId String?
+  currentPhaseId  String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  titles          UserLanguageTitle[]
+  phases          LanguageAdventurePhase[]
+  xpTransactions  LanguageXpTransaction[]
+  topicMemory     LanguageTopicMemory[]
+  questionLogs    LanguageQuestionAttemptLog[]
+
+  @@unique([userId, languageCode])
+  @@index([userId])
+  @@index([languageCode, currentLevel])
+}
+
+model LanguageTitle {
+  id          String             @id @default(cuid())
+  code        String             @unique
+  name        String
+  description String?
+  source      TitleUnlockSource
+  minLevel    Int?
+  metadata    Json?
+  isActive    Boolean            @default(true)
+  createdAt   DateTime           @default(now())
+
+  users       UserLanguageTitle[]
+}
+
+model UserLanguageTitle {
+  id                String          @id @default(cuid())
+  languageProfileId String
+  titleId           String
+  unlockedAt        DateTime        @default(now())
+  selectedAt        DateTime?
+
+  languageProfile   LanguageProfile @relation(fields: [languageProfileId], references: [id], onDelete: Cascade)
+  title             LanguageTitle   @relation(fields: [titleId], references: [id])
+
+  @@unique([languageProfileId, titleId])
+  @@index([languageProfileId])
+}
+
+model LanguageAdventurePhase {
+  id                String                @id @default(cuid())
+  languageProfileId String
+  phaseNumber       Int
+  topic             String
+  topicSlug         String
+  difficultyLevel   Int                   @default(1)
+  cefrLevel         String?
+  status            AdventurePhaseStatus  @default(DRAFT)
+  aiPromptHash      String?
+  generatedByModel  String?
+  generatedAt       DateTime?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  languageProfile   LanguageProfile       @relation(fields: [languageProfileId], references: [id], onDelete: Cascade)
+  lessons           LanguageAdventureLesson[]
+  exams             LanguageAdventureExam[]
+  hiddenLevels      LanguageHiddenLevel[]
+
+  @@unique([languageProfileId, phaseNumber])
+  @@index([languageProfileId, status])
+  @@index([topicSlug, difficultyLevel])
+}
+
+model LanguageAdventureLesson {
+  id           String              @id @default(cuid())
+  phaseId      String
+  lessonNumber Int
+  type         AdventureLessonType @default(LESSON)
+  title        String
+  objective    String
+  content      Json
+  expectedXp   Int                 @default(10)
+  unlockAfter  Int?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  phase        LanguageAdventurePhase   @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  progress     LanguageLessonProgress[]
+
+  @@unique([phaseId, lessonNumber])
+  @@index([phaseId, type])
+}
+
+model LanguageLessonProgress {
+  id                String               @id @default(cuid())
+  languageProfileId String
+  lessonId          String
+  status            LessonProgressStatus @default(LOCKED)
+  attempts          Int                  @default(0)
+  errorsCount       Int                  @default(0)
+  hintsUsed         Int                  @default(0)
+  score             Int?
+  xpAwarded         Int                  @default(0)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  updatedAt         DateTime             @updatedAt
+
+  lesson            LanguageAdventureLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([languageProfileId, lessonId])
+  @@index([languageProfileId, status])
+}
+
+model LanguageAdventureExam {
+  id           String      @id @default(cuid())
+  phaseId      String
+  type         ExamType
+  unlockAfter  Int
+  title        String
+  instructions String?
+  questions    Json
+  passScore    Int         @default(80)
+  maxAttempts  Int         @default(2)
+  xpReward     Int         @default(20)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  phase        LanguageAdventurePhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  attempts     LanguageExamAttempt[]
+
+  @@unique([phaseId, type])
+  @@index([phaseId, unlockAfter])
+}
+
+model LanguageExamAttempt {
+  id                String    @id @default(cuid())
+  languageProfileId String
+  examId            String
+  attemptNumber     Int
+  answers           Json
+  score             Int
+  passed            Boolean
+  feedback          Json?
+  xpAwarded         Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  exam              LanguageAdventureExam @relation(fields: [examId], references: [id], onDelete: Cascade)
+
+  @@unique([languageProfileId, examId, attemptNumber])
+  @@index([languageProfileId, passed])
+}
+
+model LanguageQuestionAttemptLog {
+  id                  String    @id @default(cuid())
+  languageProfileId   String
+  phaseId             String?
+  lessonId            String?
+  examId              String?
+  sourceType          String
+  questionIndex       Int?
+  questionFingerprint String
+  questionText        String
+  questionType        String?
+  userAnswer          String?
+  expectedAnswer      String?
+  isCorrect           Boolean
+  feedback            String?
+  metadata            Json?
+  createdAt           DateTime  @default(now())
+
+  languageProfile     LanguageProfile @relation(fields: [languageProfileId], references: [id], onDelete: Cascade)
+
+  @@index([languageProfileId, createdAt])
+  @@index([languageProfileId, questionFingerprint])
+  @@index([lessonId])
+  @@index([examId])
+}
+
+model LanguageXpTransaction {
+  id                String       @id @default(cuid())
+  languageProfileId String
+  sourceType        XpSourceType
+  sourceId          String
+  amount            Int
+  reason            String
+  createdAt         DateTime     @default(now())
+
+  languageProfile   LanguageProfile @relation(fields: [languageProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([languageProfileId, sourceType, sourceId])
+  @@index([languageProfileId, createdAt])
+}
+
+model LanguageTopicMemory {
+  id                String    @id @default(cuid())
+  languageProfileId String
+  topic             String
+  topicSlug         String
+  difficultyLevel   Int       @default(1)
+  usageCount        Int       @default(0)
+  contentDepthScore Int       @default(0)
+  exhausted         Boolean   @default(false)
+  lastUsedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  languageProfile   LanguageProfile @relation(fields: [languageProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([languageProfileId, topicSlug, difficultyLevel])
+  @@index([languageProfileId, exhausted])
+}
+
+model LanguageHiddenLevel {
+  id                String    @id @default(cuid())
+  phaseId           String
+  languageProfileId String
+  unlockBlockStart  Int
+  unlockBlockEnd    Int
+  title             String
+  content           Json
+  xpReward          Int       @default(15)
+  rewardTitleId     String?
+  unlockedAt        DateTime  @default(now())
+  completedAt       DateTime?
+
+  phase             LanguageAdventurePhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([languageProfileId, completedAt])
+}
+
+model AiGenerationLog {
+  id                String   @id @default(cuid())
+  userId            String?
+  languageProfileId String?
+  purpose           String
+  model             String
+  promptHash        String
+  promptPreview     String?
+  responsePreview   String?
+  responseJson      Json?
+  status            String
+  durationMs        Int?
+  errorMessage      String?
+  createdAt         DateTime @default(now())
+
+  @@index([languageProfileId, purpose])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// RAG supervisado — Centro de Conocimiento (docs/rag-supervisado-md)
+// Sin tenant_id: alania y olan corren en gateways/servidores separados.
+// ─────────────────────────────────────────────────────────────
+
+enum KnowledgeSourceStatus {
+  draft
+  pending_extraction
+  extracted
+  chunked
+  pending_review
+  needs_changes
+  approved
+  embedding_pending
+  embedding_failed
+  ready_to_publish
+  published
+  rejected
+  archived
+  expired
+}
+
+enum KnowledgeChunkStatus {
+  draft
+  pending_review
+  approved
+  rejected
+  published
+  archived
+  expired
+}
+
+enum KnowledgeJobType {
+  extract_text
+  chunk_text
+  generate_embeddings
+  detect_duplicates
+  compare_versions
+  validate_expiration
+}
+
+enum KnowledgeJobStatus {
+  queued
+  running
+  completed
+  failed
+  cancelled
+}
+
+enum KnowledgeReviewDecision {
+  approved
+  rejected
+  needs_changes
+}
+
+model KnowledgeSource {
+  id               String                @id @default(uuid())
+  title            String
+  description      String?
+  sourceType       String
+  area             String?
+  language         String                @default("es")
+  priority         Int                   @default(50)
+  status           KnowledgeSourceStatus @default(draft)
+  fileUrl          String?
+  originalFilename String?
+  mimeType         String?
+  checksum         String?
+  currentVersion   Int                   @default(1)
+  validFrom        DateTime?             @db.Date
+  validUntil       DateTime?             @db.Date
+  uploadedBy       String?
+  reviewedBy       String?
+  publishedBy      String?
+  reviewedAt       DateTime?
+  publishedAt      DateTime?
+  archivedAt       DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  versions       KnowledgeSourceVersion[]
+  chunks         KnowledgeChunk[]
+  reviews        KnowledgeReview[]
+  processingJobs KnowledgeProcessingJob[]
+  watchers       KnowledgeWatcher[]
+
+  @@index([status])
+  @@index([validFrom, validUntil])
+}
+
+model KnowledgeSourceVersion {
+  id            String                @id @default(uuid())
+  sourceId      String
+  version       Int
+  title         String
+  extractedText String?
+  textHash      String?
+  changeSummary String?
+  status        KnowledgeSourceStatus @default(draft)
+  createdBy     String?
+  createdAt     DateTime              @default(now())
+
+  source         KnowledgeSource          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  chunks         KnowledgeChunk[]
+  reviews        KnowledgeReview[]
+  processingJobs KnowledgeProcessingJob[]
+
+  @@unique([sourceId, version])
+}
+
+model KnowledgeChunk {
+  id                String               @id @default(uuid())
+  sourceId          String
+  versionId         String?
+  chunkIndex        Int
+  content           String
+  normalizedContent String?
+  contentHash       String?
+  embedding         Unsupported("vector(768)")?
+  embeddingModel    String?
+  status            KnowledgeChunkStatus @default(draft)
+  pageStart         Int?
+  pageEnd           Int?
+  sectionTitle      String?
+  tokensCount       Int?
+  priority          Int                  @default(50)
+  validFrom         DateTime?            @db.Date
+  validUntil        DateTime?            @db.Date
+  approvedBy        String?
+  approvedAt        DateTime?
+  publishedAt       DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  source  KnowledgeSource         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  version KnowledgeSourceVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceId, versionId, chunkIndex])
+  @@index([status])
+  @@index([validFrom, validUntil])
+}
+
+model KnowledgeReview {
+  id         String                  @id @default(uuid())
+  sourceId   String
+  versionId  String?
+  reviewerId String
+  decision   KnowledgeReviewDecision
+  comments   String?
+  checklist  Json                    @default("{}")
+  createdAt  DateTime                @default(now())
+
+  source  KnowledgeSource         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  version KnowledgeSourceVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([sourceId])
+}
+
+model KnowledgeProcessingJob {
+  id           String             @id @default(uuid())
+  sourceId     String?
+  versionId    String?
+  jobType      KnowledgeJobType
+  status       KnowledgeJobStatus @default(queued)
+  attempts     Int                @default(0)
+  errorMessage String?
+  metadata     Json               @default("{}")
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime           @default(now())
+
+  source  KnowledgeSource?         @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  version KnowledgeSourceVersion? @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([jobType])
+}
+
+model KnowledgeAuditLog {
+  id         String   @id @default(uuid())
+  entityType String
+  entityId   String
+  action     String
+  oldValue   Json?
+  newValue   Json?
+  userId     String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([action])
+}
+
+model KnowledgeSearchLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  query       String
+  filters     Json     @default("{}")
+  topK        Int?
+  resultCount Int?
+  latencyMs   Int?
+  createdAt   DateTime @default(now())
+}
+
+model KnowledgeAnswerSource {
+  id            String   @id @default(uuid())
+  chatMessageId String?
+  sourceId      String
+  chunkId       String
+  score         Float?
+  title         String?
+  pageStart     Int?
+  pageEnd       Int?
+  createdAt     DateTime @default(now())
+
+  @@index([sourceId])
+  @@index([chunkId])
+}
+
+// Fase 8 — actualización controlada. MVP: solo sourceType="url". El watcher
+// nunca publica: solo crea una nueva versión en pending_review (ver
+// KnowledgeSourcesService.createNewVersion).
+model KnowledgeWatcher {
+  id             String    @id @default(uuid())
+  name           String
+  sourceId       String
+  sourceType     String    @default("url")
+  targetUrl      String
+  scheduleCron   String
+  lastCheckedAt  DateTime?
+  lastChecksum   String?
+  status         String    @default("active")
+  createdBy      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  source KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+// ══════════════════════════════════════════════════════════════════
+// Motor de automatización de procesos — definición y gestión, 100% en DB.
+// No ejecuta nada todavía (no hay Playwright/Puppeteer): esto solo modela
+// el "qué" y el "cómo debería hacerse" de un procedimiento (ej. crear una
+// actividad en OLAN), para que un ejecutor futuro lo consuma. Separado
+// deliberadamente del RAG: la fuente de conocimiento responde preguntas,
+// esto describe acciones ejecutables.
+// ══════════════════════════════════════════════════════════════════
+
+enum AutomationProcessStatus {
+  draft
+  published
+  archived
+}
+
+enum AutomationChecklistMoment {
+  antes
+  despues
+}
+
+enum AutomationLogStatus {
+  pending
+  success
+  error
+}
+
+model AutomationProcess {
+  id                 String                   @id @default(uuid())
+  slug               String                   @unique
+  name               String
+  platform           String                   @default("olan")
+  role               String?
+  objective          String?
+  status             AutomationProcessStatus  @default(draft)
+  requiredInputs     String[]                 @default([])
+  optionalInputs     String[]                 @default([])
+  restrictions       String[]                 @default([])
+  createdBy          String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  steps     AutomationStep[]
+  fields    AutomationField[]
+  rules     AutomationRule[]
+  templates AutomationPayloadTemplate[]
+  checklist AutomationChecklistItem[]
+  logs      AutomationExecutionLog[]
+
+  @@index([status])
+  @@index([platform])
+}
+
+model AutomationStep {
+  id        String   @id @default(uuid())
+  processId String
+  order     Int
+  key       String
+  label     String
+  createdAt DateTime @default(now())
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([processId, order])
+}
+
+model AutomationField {
+  id            String   @id @default(uuid())
+  processId     String
+  key           String
+  tipo          String
+  requerido     Boolean  @default(false)
+  maxCaracteres Int?
+  opciones      Json?
+  order         Int
+  createdAt     DateTime @default(now())
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([processId, key])
+}
+
+model AutomationRule {
+  id        String   @id @default(uuid())
+  processId String
+  categoria String
+  reglas    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([processId, categoria])
+}
+
+model AutomationPayloadTemplate {
+  id        String   @id @default(uuid())
+  processId String
+  name      String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@unique([processId, name])
+}
+
+model AutomationChecklistItem {
+  id        String                    @id @default(uuid())
+  processId String
+  momento   AutomationChecklistMoment
+  label     String
+  order     Int
+  createdAt DateTime                  @default(now())
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@index([processId, momento])
+}
+
+model AutomationExecutionLog {
+  id            String               @id @default(uuid())
+  processId     String
+  status        AutomationLogStatus  @default(pending)
+  inputPayload  Json
+  outputSummary Json?
+  errorMessage  String?
+  executedBy    String?
+  startedAt     DateTime             @default(now())
+  completedAt   DateTime?
+
+  process AutomationProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+
+  @@index([processId])
+  @@index([status])
+}

@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.env
+*.env.local
+.pnpm-store/
+.venv-kokoro/
+salida_*.wav
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.DS_Store
+
+# Docs de contexto para asistentes de IA (no se versionan)
+docs/ai/
+
+# Datos y artefactos locales; cada servidor conserva sus propios respaldos
+backups/
+**/__pycache__/
+*.bak

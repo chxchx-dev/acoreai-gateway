@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "KnowledgeRole" AS ENUM ('SUPER_ADMIN', 'TENANT_ADMIN', 'KNOWLEDGE_SUPERVISOR', 'KNOWLEDGE_UPLOADER', 'AUDITOR', 'CHAT_USER');
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "knowledgeRole" "KnowledgeRole";

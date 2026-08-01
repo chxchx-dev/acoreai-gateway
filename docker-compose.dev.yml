@@ -1,0 +1,123 @@
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    command: ["postgres", "-c", "port=5438"]
+    ports:
+      - "127.0.0.1:5438:5438"
+    volumes:
+      - olan_ai_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER is required} -d ${POSTGRES_DB:?POSTGRES_DB is required} -p 5438",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7.0
+    ports:
+      - "127.0.0.1:27018:27017"
+    volumes:
+      - olan_ai_mongodb_data:/data/db
+    healthcheck:
+      test:
+        ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 30s
+
+  olan-ai-gateway:
+    build:
+      context: .
+      dockerfile: docker/gateway/Dockerfile.dev
+    working_dir: /app
+    command: ["sh", "./scripts/ensure-dev-deps.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+      WATCHPACK_POLLING: "true"
+      # Ollama corre en la Mac directamente (no en Docker)
+      MODEL_SERVER_URL: http://host.docker.internal:11434
+    volumes:
+      - ./:/app
+      - olan_ai_gateway_node_modules:/app/node_modules
+    ports: !override
+      - "4005:4005"
+
+  # ── Plataforma Alania ────────────────────────────────────────────────────────
+  alania-web:
+    build:
+      context: ./web/alania
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    command:
+      [
+        "sh",
+        "-lc",
+        "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5175",
+      ]
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+      VITE_OLAN_AI_GATEWAY_MODE: local
+      VITE_OLAN_AI_GATEWAY_LOCAL_URL: http://olan-ai-gateway:4005
+      AI_GATEWAY_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
+    volumes:
+      - ./web/alania:/app
+      - alania_web_node_modules:/app/node_modules
+    ports: !override
+      - "5175:5175"
+    depends_on:
+      olan-ai-gateway:
+        condition: service_healthy
+
+  # olan-web se despliega en servidor independiente — no corre en este compose.
+
+  # ── Centro de Conocimiento (panel admin RAG) ──────────────────────────────────
+  admin-web:
+    build:
+      context: ./web/admin
+      dockerfile: Dockerfile.dev
+    working_dir: /app
+    command:
+      [
+        "sh",
+        "-lc",
+        "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5180",
+      ]
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
+      VITE_GATEWAY_LOCAL_URL: http://olan-ai-gateway:4005
+      VITE_GATEWAY_LOCAL_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
+    volumes:
+      - ./web/admin:/app
+      - admin_web_node_modules:/app/node_modules
+    ports: !override
+      - "5180:5180"
+    depends_on:
+      olan-ai-gateway:
+        condition: service_healthy
+
+volumes:
+  olan_ai_postgres_data:
+  olan_ai_mongodb_data:
+  olan_ai_gateway_node_modules:
+  alania_web_node_modules:
+  admin_web_node_modules:
