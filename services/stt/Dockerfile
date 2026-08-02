@@ -9,7 +9,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py .
+COPY app ./app
 
 ENV WHISPER_MODEL=small
 ENV WHISPER_DEVICE=cpu
@@ -27,4 +27,4 @@ USER app
 
 EXPOSE 9000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9000"]

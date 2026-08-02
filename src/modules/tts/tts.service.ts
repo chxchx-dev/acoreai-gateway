@@ -6,19 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ObservabilityService } from 'src/infrastructure/observability/observability.service';
-
-export type TtsWordBoundary = {
-  offsetMs: number;
-  durationMs: number;
-  text: string;
-};
-
-export type AlignedTtsResult = {
-  audioBase64: string;
-  contentType: string;
-  text: string;
-  boundaries: TtsWordBoundary[];
-};
+import { AlignedTtsResult } from 'src/domain/tts/tts-result';
 
 @Injectable()
 export class TtsService {

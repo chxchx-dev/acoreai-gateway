@@ -1,13 +1,17 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Post, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
 import { ApiKeyOrJwtGuard } from '../guards/api-key-or-jwt.guard';
 import { TtsRequestDto } from '../dto/tts/tts-request.dto';
-import { AlignedTtsResult, TtsService } from 'src/modules/tts/tts.service';
+import { AlignedTtsResult } from 'src/domain/tts/tts-result';
+import { TTS_PORT, TtsPort } from 'src/application/ports/tts.port';
 
 @UseGuards(ApiKeyOrJwtGuard)
 @Controller('tts')
 export class TtsController {
-  constructor(private readonly ttsService: TtsService) {}
+  constructor(
+    @Inject(TTS_PORT)
+    private readonly ttsService: TtsPort,
+  ) {}
 
   @Get('voices')
   async voices(): Promise<Record<string, unknown>> {

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Controller,
+  Inject,
   Post,
   Query,
   UploadedFile,
@@ -9,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiKeyOrJwtGuard } from '../guards/api-key-or-jwt.guard';
-import { SttService } from 'src/modules/stt/stt.service';
+import { STT_PORT, SttPort } from 'src/application/ports/stt.port';
 
 interface MulterFile {
   buffer: Buffer;
@@ -21,7 +22,10 @@ interface MulterFile {
 @UseGuards(ApiKeyOrJwtGuard)
 @Controller('stt')
 export class SttController {
-  constructor(private readonly sttService: SttService) {}
+  constructor(
+    @Inject(STT_PORT)
+    private readonly sttService: SttPort,
+  ) {}
 
   /**
    * POST /api/stt?language=es

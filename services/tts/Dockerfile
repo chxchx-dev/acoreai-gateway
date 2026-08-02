@@ -18,7 +18,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app
-COPY main.py .
+COPY app ./app
 
 RUN groupadd --system app \
     && useradd --system --gid app --home-dir /home/app --create-home app \
@@ -32,4 +32,4 @@ ENV PIPER_MODELS_DIR=/home/app/.cache/piper
 USER app
 
 EXPOSE 8880
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8880"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8880"]
