@@ -1,23 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
-
-export interface TranslationSaveInput {
-  userId: string;
-  title: string;
-  text: string;
-  translations: Record<string, string>;
-  langs: string[];
-}
-
-export interface TranslationSaveRecord {
-  id: string;
-  userId: string;
-  title: string;
-  text: string;
-  translations: Record<string, string>;
-  langs: string[];
-  createdAt: string;
-}
+import { TranslationSaveInput, TranslationSaveRecord } from 'src/domain/translate/translation-save';
 
 @Injectable()
 export class TranslationSaveService {

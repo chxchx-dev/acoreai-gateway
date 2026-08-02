@@ -2,6 +2,7 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
@@ -10,8 +11,14 @@ import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
 import { PromptBuilderService } from 'src/application/services/prompt-builder.service';
-import { ConversationsService } from 'src/modules/conversations/conversations.service';
-import { LogsService } from 'src/modules/logs/logs.service';
+import {
+  CONVERSATION_REPOSITORY_PORT,
+  ConversationRepositoryPort,
+} from 'src/application/ports/conversation-repository.port';
+import {
+  CHAT_LOG_REPOSITORY_PORT,
+  ChatLogRepositoryPort,
+} from 'src/application/ports/chat-log-repository.port';
 import { ObservabilityService } from 'src/infrastructure/observability/observability.service';
 import { RagContextResult, RagService } from 'src/modules/rag/rag.service';
 import { IntentClassifierService } from './intent-classifier.service';
@@ -48,8 +55,10 @@ export class ChatService {
   constructor(
     private readonly aiOrchestrator: AiOrchestratorService,
     private readonly ragService: RagService,
-    private readonly conversationsService: ConversationsService,
-    private readonly logsService: LogsService,
+    @Inject(CONVERSATION_REPOSITORY_PORT)
+    private readonly conversationsService: ConversationRepositoryPort,
+    @Inject(CHAT_LOG_REPOSITORY_PORT)
+    private readonly logsService: ChatLogRepositoryPort,
     private readonly config: ConfigService,
     private readonly observability: ObservabilityService,
     private readonly promptBuilder: PromptBuilderService,

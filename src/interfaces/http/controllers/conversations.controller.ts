@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -17,7 +18,10 @@ import { ConversationMessagesQueryDto } from '../dto/conversations/conversation-
 import { ConversationsQueryDto } from '../dto/conversations/conversations-query.dto';
 import { CreateConversationDto } from '../dto/conversations/create-conversation.dto';
 import { UpdateConversationTitleDto } from '../dto/conversations/update-conversation-title.dto';
-import { ConversationsService } from 'src/modules/conversations/conversations.service';
+import {
+  CONVERSATION_REPOSITORY_PORT,
+  ConversationRepositoryPort,
+} from 'src/application/ports/conversation-repository.port';
 
 function jwtUser(req: Request): JwtPayload {
   return (req as unknown as Record<string, JwtPayload>)['jwtUser'];
@@ -30,7 +34,10 @@ function isAdmin(req: Request): boolean {
 @UseGuards(JwtAuthGuard)
 @Controller('conversations')
 export class ConversationsController {
-  constructor(private readonly conversationsService: ConversationsService) {}
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY_PORT)
+    private readonly conversationsService: ConversationRepositoryPort,
+  ) {}
 
   @Get()
   async findAll(@Query() query: ConversationsQueryDto, @Req() req: Request) {

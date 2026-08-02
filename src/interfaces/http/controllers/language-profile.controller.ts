@@ -1,8 +1,11 @@
-import { Controller, Get, Post, Patch, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Inject, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { ApiKeyGuard } from '../guards/api-key.guard';
-import { LanguageProfileService } from 'src/modules/languages/application/services/language-profile.service';
+import {
+  LANGUAGE_PROFILE_REPOSITORY_PORT,
+  LanguageProfileRepositoryPort,
+} from 'src/application/ports/language-profile-repository.port';
 import { LanguageCode } from '@prisma/client';
 
 interface JwtUser { sub: string; email: string; role: string; }
@@ -10,7 +13,10 @@ interface JwtUser { sub: string; email: string; role: string; }
 @Controller('languages')
 @UseGuards(ApiKeyGuard, JwtAuthGuard)
 export class LanguageProfileController {
-  constructor(private readonly profileService: LanguageProfileService) {}
+  constructor(
+    @Inject(LANGUAGE_PROFILE_REPOSITORY_PORT)
+    private readonly profileService: LanguageProfileRepositoryPort,
+  ) {}
 
   @Get('me')
   async getProfile(@Req() req: Request) {

@@ -17,6 +17,6 @@ import { AiOrchestratorService } from './ai-orchestrator.service';
       useExisting: OllamaAdapter,
     },
   ],
-  exports: [AiOrchestratorService],
+  exports: [AiOrchestratorService, LLM_PORT],
 })
 export class AiOrchestratorModule {}

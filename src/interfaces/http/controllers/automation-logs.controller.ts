@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AutomationPermissionGuard } from '../guards/automation-permission.guard';
 import { RequireAutomationAction } from '../decorators/automation-action.decorator';
 import { CreateAutomationLogDto } from '../dto/automation/create-automation-log.dto';
-import { AutomationLogsService } from 'src/modules/automation/automation-logs.service';
+import {
+  AUTOMATION_LOG_REPOSITORY_PORT,
+  AutomationLogRepositoryPort,
+} from 'src/application/ports/automation-log-repository.port';
 import { JwtPayload } from 'src/modules/auth/auth.service';
 
 function jwtUser(req: Request): JwtPayload {
@@ -15,7 +18,10 @@ function jwtUser(req: Request): JwtPayload {
 @UseGuards(ApiKeyGuard, JwtAuthGuard, AutomationPermissionGuard)
 @Controller('automation')
 export class AutomationLogsController {
-  constructor(private readonly logs: AutomationLogsService) {}
+  constructor(
+    @Inject(AUTOMATION_LOG_REPOSITORY_PORT)
+    private readonly logs: AutomationLogRepositoryPort,
+  ) {}
 
   @Get('processes/:processId/logs')
   @RequireAutomationAction('view_process')

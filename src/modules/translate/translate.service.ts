@@ -1,10 +1,13 @@
-import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
 import { ObservabilityService } from 'src/infrastructure/observability/observability.service';
 import { TranslateRequestDto } from 'src/interfaces/http/dto/translate/translate-request.dto';
 import { TranslateResponseDto } from 'src/interfaces/http/dto/translate/translate-response.dto';
-import { TranslationCacheService } from './translation-cache.service';
+import {
+  TRANSLATION_CACHE_PORT,
+  TranslationCachePort,
+} from 'src/application/ports/translation-cache.port';
 
 type FlushableResponse = Response & { flush?: () => void };
 
@@ -70,7 +73,8 @@ export class TranslateService implements OnModuleInit {
   constructor(
     private readonly aiOrchestrator: AiOrchestratorService,
     private readonly observability: ObservabilityService,
-    private readonly translationCache: TranslationCacheService,
+    @Inject(TRANSLATION_CACHE_PORT)
+    private readonly translationCache: TranslationCachePort,
   ) {}
 
   onModuleInit(): void {

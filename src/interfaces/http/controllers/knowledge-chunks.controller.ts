@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, HttpCode, HttpStatus, Inject, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { KnowledgePermissionGuard } from '../guards/knowledge-permission.guard';
 import { RequireKnowledgeAction } from '../decorators/knowledge-action.decorator';
 import { UpdateKnowledgeChunkDto } from '../dto/knowledge/update-knowledge-chunk.dto';
-import { KnowledgeReviewService } from 'src/modules/knowledge/knowledge-review.service';
+import {
+  KNOWLEDGE_REVIEW_REPOSITORY_PORT,
+  KnowledgeReviewRepositoryPort,
+} from 'src/application/ports/knowledge-review-repository.port';
 import { JwtPayload } from 'src/modules/auth/auth.service';
 
 function jwtUser(req: Request): JwtPayload {
@@ -16,7 +19,10 @@ function jwtUser(req: Request): JwtPayload {
 @RequireKnowledgeAction('edit_chunk')
 @Controller('knowledge/chunks')
 export class KnowledgeChunksController {
-  constructor(private readonly knowledgeReviewService: KnowledgeReviewService) {}
+  constructor(
+    @Inject(KNOWLEDGE_REVIEW_REPOSITORY_PORT)
+    private readonly knowledgeReviewService: KnowledgeReviewRepositoryPort,
+  ) {}
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() dto: UpdateKnowledgeChunkDto, @Req() req: Request) {

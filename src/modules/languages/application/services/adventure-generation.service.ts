@@ -1,7 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
-import { OllamaService } from 'src/modules/ollama/ollama.service';
+import { LLM_PORT, LlmPort } from 'src/application/ports/llm.port';
 import { LanguageTopicMemoryService } from './language-topic-memory.service';
 
 const LESSON_TYPES = [
@@ -213,7 +213,8 @@ export class AdventureGenerationService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly ollama: OllamaService,
+    @Inject(LLM_PORT)
+    private readonly llm: LlmPort,
     private readonly topicMemory: LanguageTopicMemoryService,
   ) {}
 
@@ -517,7 +518,7 @@ Mandatory rules:
 - Keep all student-facing explanations in Spanish and the actual exercise content in English.`;
 
     try {
-      const result = await this.ollama.chat({
+      const result = await this.llm.chat({
         model: this.MODEL,
         messages: [{ role: 'user', content: prompt }],
         options: { temperature: 0.5, num_predict: 2200 },
@@ -654,7 +655,7 @@ Mandatory rules:
 - Each item must include explanationEs.`;
 
     try {
-      const result = await this.ollama.chat({
+      const result = await this.llm.chat({
         model: this.MODEL,
         messages: [{ role: 'user', content: prompt }],
         options: { temperature: 0.4, num_predict: 2600 },

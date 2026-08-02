@@ -1,6 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Request } from 'express';
-import { DeviceService } from 'src/modules/auth/device.service';
+import {
+  USER_DEVICE_REPOSITORY_PORT,
+  UserDeviceRepositoryPort,
+} from 'src/application/ports/user-device-repository.port';
 
 /**
  * Bloquea el acceso a la IA cuando la cuenta ya está reclamada por otro
@@ -12,7 +15,10 @@ import { DeviceService } from 'src/modules/auth/device.service';
  */
 @Injectable()
 export class DeviceLockGuard implements CanActivate {
-  constructor(private readonly deviceService: DeviceService) {}
+  constructor(
+    @Inject(USER_DEVICE_REPOSITORY_PORT)
+    private readonly deviceService: UserDeviceRepositoryPort,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();

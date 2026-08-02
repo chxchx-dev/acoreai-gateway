@@ -1,5 +1,5 @@
 import * as ExcelJS from 'exceljs';
-import type { MongoChatLogDocument } from 'src/infrastructure/database/mongodb/mongodb.service';
+import type { ChatLogEntry } from 'src/domain/logs/chat-log';
 
 const COLUMNS = [
   { key: 'id', header: 'ID' },
@@ -15,7 +15,7 @@ const COLUMNS = [
   { key: 'sources', header: 'Fuentes citadas' },
 ] as const;
 
-function toRow(log: Partial<MongoChatLogDocument>): Record<string, string | number> {
+function toRow(log: Partial<ChatLogEntry>): Record<string, string | number> {
   return {
     id: log.id ?? '',
     createdAt: log.createdAt ? new Date(log.createdAt).toISOString() : '',
@@ -39,7 +39,7 @@ function csvEscape(value: string | number): string {
   return str;
 }
 
-export function buildLogsCsv(logs: Partial<MongoChatLogDocument>[]): string {
+export function buildLogsCsv(logs: Partial<ChatLogEntry>[]): string {
   const header = COLUMNS.map((c) => csvEscape(c.header)).join(',');
   const rows = logs.map((log) => {
     const row = toRow(log);
@@ -48,7 +48,7 @@ export function buildLogsCsv(logs: Partial<MongoChatLogDocument>[]): string {
   return [header, ...rows].join('\n');
 }
 
-export async function buildLogsXlsx(logs: Partial<MongoChatLogDocument>[]): Promise<Buffer> {
+export async function buildLogsXlsx(logs: Partial<ChatLogEntry>[]): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet('Historial');
 

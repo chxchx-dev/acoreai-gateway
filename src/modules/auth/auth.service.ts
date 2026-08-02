@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   Logger,
   OnModuleInit,
@@ -10,10 +11,17 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 import { randomBytes, randomInt, randomUUID } from 'crypto';
-import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { MailService } from 'src/infrastructure/mail/mail.service';
 import { UserRole } from 'src/domain/auth/user-role';
 import { KnowledgeRole } from 'src/domain/knowledge/knowledge-role';
+import {
+  USER_REPOSITORY_PORT,
+  UserRepositoryPort,
+} from 'src/application/ports/user-repository.port';
+import {
+  AUTH_SESSION_REPOSITORY_PORT,
+  AuthSessionRepositoryPort,
+} from 'src/application/ports/auth-session-repository.port';
 export { UserRole } from 'src/domain/auth/user-role';
 export { KnowledgeRole } from 'src/domain/knowledge/knowledge-role';
 
@@ -31,8 +39,6 @@ export interface JwtPayload {
   iss?:  string;
   aud?:  string | string[];
 }
-
-type PrismaAny = Record<string, unknown>;
 
 export interface AuthUser {
   id: string;
@@ -53,18 +59,6 @@ export interface AuthRequestContext {
   userId?: string;
   role?: UserRole;
   authenticated: boolean;
-}
-
-interface AuthSessionRecord {
-  id: string;
-  userId: string;
-  refreshTokenHash: string;
-  expiresAt: Date;
-  revokedAt?: Date | null;
-  deviceId?: string | null;
-  deviceName?: string | null;
-  platform?: string | null;
-  user: AuthUser;
 }
 
 export interface SessionDeviceInfo {
@@ -115,7 +109,10 @@ export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
+    @Inject(USER_REPOSITORY_PORT)
+    private readonly users: UserRepositoryPort,
+    @Inject(AUTH_SESSION_REPOSITORY_PORT)
+    private readonly sessions: AuthSessionRepositoryPort,
     private readonly config: ConfigService,
     private readonly jwt: JwtService,
     private readonly mail: MailService,
@@ -175,7 +172,7 @@ export class AuthService implements OnModuleInit {
     }
 
     if (payload.sid) {
-      const session = await this.prisma.authSession.findUnique({ where: { id: payload.sid } });
+      const session = await this.sessions.findById(payload.sid);
       if (!session || session.revokedAt || session.expiresAt <= new Date()) {
         throw new UnauthorizedException('Tu sesión fue cerrada: se inició sesión en otro dispositivo');
       }
@@ -239,10 +236,7 @@ export class AuthService implements OnModuleInit {
     deviceId?: string,
     force?: boolean,
   ): Promise<void> {
-    const active = await this.prisma.authSession.findFirst({
-      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: 'desc' },
-    });
+    const active = await this.sessions.findActiveByUserId(userId);
 
     if (!active) return;
     if (deviceId && active.deviceId === deviceId) return;
@@ -259,10 +253,7 @@ export class AuthService implements OnModuleInit {
       });
     }
 
-    await this.prisma.authSession.updateMany({
-      where: { userId, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+    await this.sessions.revokeAllForUser(userId);
   }
 
   private async createRefreshSession(
@@ -276,16 +267,14 @@ export class AuthService implements OnModuleInit {
     const ttlSeconds = this.config.get<number>('JWT_REFRESH_TTL_SECONDS', 2592000);
     const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
 
-    await this.prisma.authSession.create({
-      data: {
-        id: sessionId,
-        userId,
-        refreshTokenHash,
-        expiresAt,
-        deviceId: device?.deviceId,
-        deviceName: device?.deviceName,
-        platform: device?.platform,
-      },
+    await this.sessions.create({
+      id: sessionId,
+      userId,
+      refreshTokenHash,
+      expiresAt,
+      deviceId: device?.deviceId,
+      deviceName: device?.deviceName,
+      platform: device?.platform,
     });
 
     return { refreshToken, sessionId };
@@ -297,7 +286,7 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Refresh token inválido o expirado');
     }
 
-    await this.revokeSession(session.id);
+    await this.sessions.revoke(session.id);
     return this.issueTokens(session.user, {
       deviceId: session.deviceId ?? undefined,
       deviceName: session.deviceName ?? undefined,
@@ -308,7 +297,7 @@ export class AuthService implements OnModuleInit {
   async revokeRefreshToken(refreshToken: string): Promise<{ revoked: true }> {
     const session = await this.findValidRefreshSession(refreshToken);
     if (session) {
-      await this.revokeSession(session.id);
+      await this.sessions.revoke(session.id);
     }
 
     return { revoked: true };
@@ -316,46 +305,23 @@ export class AuthService implements OnModuleInit {
 
   private async findValidRefreshSession(
     refreshToken: string,
-  ): Promise<AuthSessionRecord | null> {
+  ): Promise<{ id: string; refreshTokenHash: string; revokedAt: Date | null; expiresAt: Date; deviceId: string | null; deviceName: string | null; platform: string | null; user: AuthUser } | null> {
     const [sessionId, refreshSecret] = refreshToken.split('.');
     if (!sessionId || !refreshSecret) {
       return null;
     }
 
-    const db = this.prisma as unknown as PrismaAny;
-    const client = db['authSession'] as {
-      findUnique: (q: unknown) => Promise<AuthSessionRecord | null>;
-    };
-    const session = await client.findUnique({
-      where: { id: sessionId },
-      include: {
-        user: {
-          select: { id: true, email: true, name: true, role: true },
-        },
-      },
-    });
+    const session = await this.sessions.findByIdWithUser(sessionId);
 
-    if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+    if (!session || !session.user || session.revokedAt || session.expiresAt <= new Date()) {
       return null;
     }
 
     if (await this.verifyPassword(refreshSecret, session.refreshTokenHash)) {
-      return session;
+      return { ...session, user: session.user };
     }
 
     return null;
-  }
-
-  private async revokeSession(sessionId: string): Promise<void> {
-    const db = this.prisma as unknown as PrismaAny;
-    const client = db['authSession'] as {
-      update: (q: unknown) => Promise<PrismaAny>;
-    };
-
-    await client.update({
-      where: { id: sessionId },
-      data: { revokedAt: new Date() },
-    });
   }
 
   // ── Auth ───────────────────────────────────────────────────────────────────
@@ -366,20 +332,18 @@ export class AuthService implements OnModuleInit {
     device?: SessionDeviceInfo,
     force?: boolean,
   ): Promise<AuthTokens> {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as { findUnique: (q: unknown) => Promise<PrismaAny | null> };
-    const user   = await client.findUnique({ where: { email: email.trim().toLowerCase() } });
+    const user = await this.users.findByEmail(email.trim().toLowerCase());
 
-    if (!user || !(await this.verifyPassword(password, user['passwordHash'] as string))) {
+    if (!user || !(await this.verifyPassword(password, user.passwordHash))) {
       throw new UnauthorizedException('Credenciales inválidas');
     }
 
-    const authUser = {
-      id: user['id'] as string,
-      email: user['email'] as string,
-      name: user['name'] as string,
-      role: user['role'] as UserRole,
-      knowledgeRole: (user['knowledgeRole'] as KnowledgeRole | null) ?? null,
+    const authUser: AuthUser = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      knowledgeRole: user.knowledgeRole ?? null,
     };
     await this.assertNoOtherActiveSession(authUser.id, device?.deviceId, force);
     return this.issueTokens(authUser, device);
@@ -390,21 +354,12 @@ export class AuthService implements OnModuleInit {
     currentPassword: string,
     newPassword: string,
   ): Promise<{ changed: true }> {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      update: (q: unknown) => Promise<PrismaAny>;
-    };
-
-    const user = await client.findUnique({ where: { id: userId } });
-    if (!user || !(await this.verifyPassword(currentPassword, user['passwordHash'] as string))) {
+    const user = await this.users.findById(userId);
+    if (!user || !(await this.verifyPassword(currentPassword, user.passwordHash))) {
       throw new UnauthorizedException('La contraseña actual no es correcta');
     }
 
-    await client.update({
-      where: { id: userId },
-      data: { passwordHash: await this.hashPassword(newPassword) },
-    });
+    await this.users.updatePasswordById(userId, await this.hashPassword(newPassword));
 
     return { changed: true };
   }
@@ -418,24 +373,14 @@ export class AuthService implements OnModuleInit {
    */
   async forgotPassword(email: string): Promise<{ sent: true }> {
     const normalizedEmail = email.trim().toLowerCase();
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      update: (q: unknown) => Promise<PrismaAny>;
-    };
+    const user = await this.users.findByEmail(normalizedEmail);
 
-    const user = await client.findUnique({ where: { email: normalizedEmail } });
     if (user) {
       const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
       const ttlMinutes = this.config.get<number>('PASSWORD_RESET_TTL_MINUTES', 15);
+      const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
 
-      await client.update({
-        where: { email: normalizedEmail },
-        data: {
-          resetTokenHash: await this.hashPassword(code),
-          resetTokenExpiresAt: new Date(Date.now() + ttlMinutes * 60 * 1000),
-        },
-      });
+      await this.users.setResetToken(normalizedEmail, await this.hashPassword(code), expiresAt);
 
       try {
         await this.mail.sendPasswordResetCode(normalizedEmail, code, ttlMinutes);
@@ -451,43 +396,22 @@ export class AuthService implements OnModuleInit {
 
   async resetPassword(email: string, code: string, newPassword: string): Promise<{ reset: true }> {
     const normalizedEmail = email.trim().toLowerCase();
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      update: (q: unknown) => Promise<PrismaAny>;
-    };
-
-    const user = await client.findUnique({ where: { email: normalizedEmail } });
-    const resetTokenHash = user?.['resetTokenHash'] as string | undefined;
-    const resetTokenExpiresAt = user?.['resetTokenExpiresAt'] as Date | undefined;
+    const user = await this.users.findByEmail(normalizedEmail);
 
     if (
       !user ||
-      !resetTokenHash ||
-      !resetTokenExpiresAt ||
-      resetTokenExpiresAt <= new Date() ||
-      !(await this.verifyPassword(code, resetTokenHash))
+      !user.resetTokenHash ||
+      !user.resetTokenExpiresAt ||
+      user.resetTokenExpiresAt <= new Date() ||
+      !(await this.verifyPassword(code, user.resetTokenHash))
     ) {
       throw new UnauthorizedException('El código es inválido o ya venció');
     }
 
-    await client.update({
-      where: { email: normalizedEmail },
-      data: {
-        passwordHash: await this.hashPassword(newPassword),
-        resetTokenHash: null,
-        resetTokenExpiresAt: null,
-      },
-    });
+    await this.users.updatePasswordByEmail(normalizedEmail, await this.hashPassword(newPassword));
 
     // Cierra las sesiones activas: si alguien más tenía el refresh token, queda invalidado.
-    const sessionsClient = db['authSession'] as {
-      updateMany: (q: unknown) => Promise<PrismaAny>;
-    };
-    await sessionsClient.updateMany({
-      where: { userId: user['id'] as string, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+    await this.sessions.revokeAllForUser(user.id);
 
     return { reset: true };
   }
@@ -498,58 +422,62 @@ export class AuthService implements OnModuleInit {
     name: string,
     role: UserRole = UserRole.FREE,
     knowledgeRole?: KnowledgeRole,
-  ) {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      create: (q: unknown) => Promise<PrismaAny>;
-    };
-
-    const exists = await client.findUnique({ where: { email: email.trim().toLowerCase() } });
+  ): Promise<{ id: string; email: string; name: string; role: UserRole; knowledgeRole: KnowledgeRole | null; createdAt: Date }> {
+    const normalizedEmail = email.trim().toLowerCase();
+    const exists = await this.users.findByEmail(normalizedEmail);
     if (exists) throw new ConflictException('El correo ya está registrado');
 
-    return client.create({
-      data: {
-        email:        email.trim().toLowerCase(),
-        passwordHash: await this.hashPassword(password),
-        name,
-        role,
-        knowledgeRole: knowledgeRole ?? null,
-      },
-      select: { id: true, email: true, name: true, role: true, knowledgeRole: true, createdAt: true },
+    const user = await this.users.create({
+      email: normalizedEmail,
+      passwordHash: await this.hashPassword(password),
+      name,
+      role,
+      knowledgeRole: knowledgeRole ?? null,
     });
-  }
 
-  async findById(id: string) {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as { findUnique: (q: unknown) => Promise<PrismaAny | null> };
-    return client.findUnique({
-      where:  { id },
-      select: { id: true, email: true, name: true, role: true },
-    });
-  }
-
-  async listUsers() {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findMany: (q: unknown) => Promise<PrismaAny[]>;
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      knowledgeRole: user.knowledgeRole,
+      createdAt: user.createdAt,
     };
-    return client.findMany({
-      select:  { id: true, email: true, name: true, role: true, knowledgeRole: true, createdAt: true },
-      orderBy: { createdAt: 'asc' },
-    });
   }
 
-  async setKnowledgeRole(userId: string, knowledgeRole: KnowledgeRole | null) {
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      update: (q: unknown) => Promise<PrismaAny>;
+  async findById(id: string): Promise<{ id: string; email: string; name: string; role: UserRole } | null> {
+    const user = await this.users.findById(id);
+    if (!user) return null;
+
+    return { id: user.id, email: user.email, name: user.name, role: user.role };
+  }
+
+  async listUsers(): Promise<
+    { id: string; email: string; name: string; role: UserRole; knowledgeRole: KnowledgeRole | null; createdAt: Date }[]
+  > {
+    const users = await this.users.findMany();
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      knowledgeRole: user.knowledgeRole,
+      createdAt: user.createdAt,
+    }));
+  }
+
+  async setKnowledgeRole(
+    userId: string,
+    knowledgeRole: KnowledgeRole | null,
+  ): Promise<{ id: string; email: string; name: string; role: UserRole; knowledgeRole: KnowledgeRole | null }> {
+    const user = await this.users.updateKnowledgeRole(userId, knowledgeRole);
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      knowledgeRole: user.knowledgeRole,
     };
-    return client.update({
-      where:  { id: userId },
-      data:   { knowledgeRole },
-      select: { id: true, email: true, name: true, role: true, knowledgeRole: true },
-    });
   }
 
   // ── Seed ───────────────────────────────────────────────────────────────────
@@ -565,25 +493,17 @@ export class AuthService implements OnModuleInit {
     }
 
     try {
-      const db     = this.prisma as unknown as PrismaAny;
-      const client = db['user'] as {
-        findUnique: (q: unknown) => Promise<PrismaAny | null>;
-        update: (q: unknown) => Promise<PrismaAny>;
-      };
-      const existing   = await client.findUnique({ where: { email: adminEmail } });
+      const existing = await this.users.findByEmail(adminEmail);
       if (!existing) {
         await this.createUser(adminEmail, adminPassword, adminName, UserRole.ADMIN);
         this.logger.log(`Admin sembrado: ${adminEmail}`);
         return;
       }
 
-      await client.update({
-        where: { email: adminEmail },
-        data: {
-          passwordHash: await this.hashPassword(adminPassword),
-          name: adminName,
-          role: UserRole.ADMIN,
-        },
+      await this.users.updateProfileByEmail(adminEmail, {
+        passwordHash: await this.hashPassword(adminPassword),
+        name: adminName,
+        role: UserRole.ADMIN,
       });
       this.logger.log(`Admin sincronizado desde entorno: ${adminEmail}`);
     } catch (err) {
@@ -601,12 +521,7 @@ export class AuthService implements OnModuleInit {
     const email = user.email.trim().toLowerCase();
 
     try {
-      const db     = this.prisma as unknown as PrismaAny;
-      const client = db['user'] as {
-        findUnique: (q: unknown) => Promise<PrismaAny | null>;
-        update: (q: unknown) => Promise<PrismaAny>;
-      };
-      const existing = await client.findUnique({ where: { email } });
+      const existing = await this.users.findByEmail(email);
 
       if (!existing) {
         await this.createUser(email, user.password, user.name, user.role);
@@ -614,13 +529,10 @@ export class AuthService implements OnModuleInit {
         return;
       }
 
-      await client.update({
-        where: { email },
-        data: {
-          passwordHash: await this.hashPassword(user.password),
-          name: user.name,
-          role: user.role,
-        },
+      await this.users.updateProfileByEmail(email, {
+        passwordHash: await this.hashPassword(user.password),
+        name: user.name,
+        role: user.role,
       });
       this.logger.log(`Usuario por defecto sincronizado: ${email}`);
     } catch (err) {

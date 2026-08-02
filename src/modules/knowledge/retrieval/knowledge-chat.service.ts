@@ -1,9 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
-import { LogsService } from 'src/modules/logs/logs.service';
+import {
+  CHAT_LOG_REPOSITORY_PORT,
+  ChatLogRepositoryPort,
+} from 'src/application/ports/chat-log-repository.port';
 import { KnowledgeSearchService } from './knowledge-search.service';
 import { buildRagSystemPrompt } from './prompt.util';
 import { KnowledgeAuditService } from '../knowledge-audit.service';
@@ -25,7 +28,8 @@ export class KnowledgeChatService {
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
     private readonly audit: KnowledgeAuditService,
-    private readonly logs: LogsService,
+    @Inject(CHAT_LOG_REPOSITORY_PORT)
+    private readonly logs: ChatLogRepositoryPort,
   ) {}
 
   async ask(params: {

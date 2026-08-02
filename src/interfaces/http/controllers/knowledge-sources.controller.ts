@@ -7,6 +7,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -28,9 +29,18 @@ import { UpdateKnowledgeSourceDto } from '../dto/knowledge/update-knowledge-sour
 import { CreateKnowledgeVersionDto } from '../dto/knowledge/create-knowledge-version.dto';
 import { CreateKnowledgeReviewDto } from '../dto/knowledge/create-knowledge-review.dto';
 import { ArchiveKnowledgeSourceDto } from '../dto/knowledge/archive-knowledge-source.dto';
-import { KnowledgeSourcesService } from 'src/modules/knowledge/knowledge-sources.service';
-import { KnowledgeReviewService } from 'src/modules/knowledge/knowledge-review.service';
-import { KnowledgePublishingService } from 'src/modules/knowledge/knowledge-publishing.service';
+import {
+  KNOWLEDGE_SOURCE_REPOSITORY_PORT,
+  KnowledgeSourceRepositoryPort,
+} from 'src/application/ports/knowledge-source-repository.port';
+import {
+  KNOWLEDGE_REVIEW_REPOSITORY_PORT,
+  KnowledgeReviewRepositoryPort,
+} from 'src/application/ports/knowledge-review-repository.port';
+import {
+  KNOWLEDGE_PUBLISHING_REPOSITORY_PORT,
+  KnowledgePublishingRepositoryPort,
+} from 'src/application/ports/knowledge-publishing-repository.port';
 import { JwtPayload, KnowledgeRole } from 'src/modules/auth/auth.service';
 
 interface MulterFile {
@@ -51,9 +61,12 @@ const FULL_ACCESS_ROLES = [KnowledgeRole.SUPER_ADMIN, KnowledgeRole.TENANT_ADMIN
 @Controller('knowledge/sources')
 export class KnowledgeSourcesController {
   constructor(
-    private readonly knowledgeSourcesService: KnowledgeSourcesService,
-    private readonly knowledgeReviewService: KnowledgeReviewService,
-    private readonly knowledgePublishingService: KnowledgePublishingService,
+    @Inject(KNOWLEDGE_SOURCE_REPOSITORY_PORT)
+    private readonly knowledgeSourcesService: KnowledgeSourceRepositoryPort,
+    @Inject(KNOWLEDGE_REVIEW_REPOSITORY_PORT)
+    private readonly knowledgeReviewService: KnowledgeReviewRepositoryPort,
+    @Inject(KNOWLEDGE_PUBLISHING_REPOSITORY_PORT)
+    private readonly knowledgePublishingService: KnowledgePublishingRepositoryPort,
   ) {}
 
   // Fase 7: 10 cargas/hora por usuario.

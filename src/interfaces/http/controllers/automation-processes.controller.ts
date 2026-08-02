@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -11,7 +11,10 @@ import { UpsertAutomationFieldDto } from '../dto/automation/upsert-automation-fi
 import { UpsertAutomationRuleDto } from '../dto/automation/upsert-automation-rule.dto';
 import { UpsertAutomationTemplateDto } from '../dto/automation/upsert-automation-template.dto';
 import { UpsertAutomationChecklistItemDto } from '../dto/automation/upsert-automation-checklist-item.dto';
-import { AutomationProcessesService } from 'src/modules/automation/automation-processes.service';
+import {
+  AUTOMATION_PROCESS_REPOSITORY_PORT,
+  AutomationProcessRepositoryPort,
+} from 'src/application/ports/automation-process-repository.port';
 import { JwtPayload } from 'src/modules/auth/auth.service';
 
 function jwtUser(req: Request): JwtPayload {
@@ -21,7 +24,10 @@ function jwtUser(req: Request): JwtPayload {
 @UseGuards(ApiKeyGuard, JwtAuthGuard, AutomationPermissionGuard)
 @Controller('automation/processes')
 export class AutomationProcessesController {
-  constructor(private readonly processes: AutomationProcessesService) {}
+  constructor(
+    @Inject(AUTOMATION_PROCESS_REPOSITORY_PORT)
+    private readonly processes: AutomationProcessRepositoryPort,
+  ) {}
 
   @Post()
   @RequireAutomationAction('manage_process')

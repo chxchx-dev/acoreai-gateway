@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   Param,
   Patch,
   Query,
@@ -11,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { DeviceLockGuard } from '../guards/device-lock.guard';
-import { ConversationsService } from 'src/modules/conversations/conversations.service';
+import {
+  CONVERSATION_REPOSITORY_PORT,
+  ConversationRepositoryPort,
+} from 'src/application/ports/conversation-repository.port';
 
 /**
  * Conversation endpoints for the mobile app.
@@ -21,7 +25,10 @@ import { ConversationsService } from 'src/modules/conversations/conversations.se
 @UseGuards(ApiKeyGuard, DeviceLockGuard)
 @Controller('conversations/app')
 export class ConversationsMobileController {
-  constructor(private readonly conversationsService: ConversationsService) {}
+  constructor(
+    @Inject(CONVERSATION_REPOSITORY_PORT)
+    private readonly conversationsService: ConversationRepositoryPort,
+  ) {}
 
   @Get()
   listApp(

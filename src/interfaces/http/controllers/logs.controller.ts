@@ -1,10 +1,13 @@
-import { ForbiddenException, Controller, Get, Param, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { ForbiddenException, Controller, Get, Inject, Param, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { JwtPayload, UserRole } from 'src/modules/auth/auth.service';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { LogsQueryDto } from '../dto/logs/logs-query.dto';
 import { LogsExportQueryDto } from '../dto/logs/logs-export-query.dto';
-import { LogsService } from 'src/modules/logs/logs.service';
+import {
+  CHAT_LOG_REPOSITORY_PORT,
+  ChatLogRepositoryPort,
+} from 'src/application/ports/chat-log-repository.port';
 import { buildLogsCsv, buildLogsXlsx } from 'src/modules/logs/export.util';
 
 function jwtUser(req: Request): JwtPayload {
@@ -18,7 +21,10 @@ function isAdmin(req: Request): boolean {
 @UseGuards(JwtAuthGuard)
 @Controller('logs')
 export class LogsController {
-  constructor(private readonly logsService: LogsService) {}
+  constructor(
+    @Inject(CHAT_LOG_REPOSITORY_PORT)
+    private readonly logsService: ChatLogRepositoryPort,
+  ) {}
 
   @Get('conversations')
   async findConversations(

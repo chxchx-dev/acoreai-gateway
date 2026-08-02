@@ -1,6 +1,9 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
 import { ApiKeyGuard } from '../guards/api-key.guard';
-import { DeviceService } from 'src/modules/auth/device.service';
+import {
+  USER_DEVICE_REPOSITORY_PORT,
+  UserDeviceRepositoryPort,
+} from 'src/application/ports/user-device-repository.port';
 import { DeviceClaimDto } from '../dto/auth/device-claim.dto';
 import { DeviceReleaseDto } from '../dto/auth/device-release.dto';
 
@@ -12,7 +15,10 @@ import { DeviceReleaseDto } from '../dto/auth/device-release.dto';
 @UseGuards(ApiKeyGuard)
 @Controller('device')
 export class DeviceController {
-  constructor(private readonly deviceService: DeviceService) {}
+  constructor(
+    @Inject(USER_DEVICE_REPOSITORY_PORT)
+    private readonly deviceService: UserDeviceRepositoryPort,
+  ) {}
 
   @Post('claim')
   claim(@Body() dto: DeviceClaimDto) {

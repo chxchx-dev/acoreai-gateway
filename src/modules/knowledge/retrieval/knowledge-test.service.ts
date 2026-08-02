@@ -1,11 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
 import { KnowledgeAuditService } from '../knowledge-audit.service';
 import { computeSourceWarnings } from '../ingestion/warnings.util';
 import { buildRagSystemPrompt } from './prompt.util';
-import { LogsService } from 'src/modules/logs/logs.service';
+import {
+  CHAT_LOG_REPOSITORY_PORT,
+  ChatLogRepositoryPort,
+} from 'src/application/ports/chat-log-repository.port';
 
 interface TestChunkRow {
   chunkId: string;
@@ -32,7 +35,8 @@ export class KnowledgeTestService {
     private readonly aiOrchestrator: AiOrchestratorService,
     private readonly audit: KnowledgeAuditService,
     private readonly config: ConfigService,
-    private readonly logs: LogsService,
+    @Inject(CHAT_LOG_REPOSITORY_PORT)
+    private readonly logs: ChatLogRepositoryPort,
   ) {
     this.embeddingDimensions = Number(this.config.get('EMBEDDING_DIMENSIONS', 768));
   }

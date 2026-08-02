@@ -1,13 +1,9 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
+import { DeviceMeta } from 'src/domain/auth/device-meta';
 
 const DEVICE_IN_USE_MESSAGE =
   'Tu cuenta está siendo usada en otro dispositivo. Cierra sesión ahí para continuar aquí.';
-
-export interface DeviceMeta {
-  deviceName?: string;
-  platform?: string;
-}
 
 @Injectable()
 export class DeviceService {

@@ -1,6 +1,8 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Collection, Db, MongoClient, MongoClientOptions } from 'mongodb';
+import { TranslationCacheEntry } from 'src/domain/translate/translation-cache-entry';
+import { ChatLogEntry } from 'src/domain/logs/chat-log';
 
 export interface MongoConversationDocument {
   id: string;
@@ -52,32 +54,6 @@ export interface MongoAiProfileDocument {
   cachedAt: Date;
 }
 
-export interface MongoTranslationDocument {
-  textHash: string;
-  language: string;
-  sourceText: string;
-  translation: string;
-  model: string;
-  hits: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface MongoChatLogDocument {
-  id: string;
-  userId?: string;
-  conversationId?: string;
-  source?: string;
-  question: string;
-  answer?: string | null;
-  model: string;
-  status: string;
-  errorMessage?: string;
-  durationMs?: number;
-  chunksUsed: number;
-  sources?: unknown;
-  createdAt: Date;
-}
 
 @Injectable()
 export class MongoService implements OnModuleInit, OnModuleDestroy {
@@ -129,8 +105,8 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
     return this.db().collection<MongoAiProfileDocument>('ai_profiles');
   }
 
-  chatLogs(): Collection<MongoChatLogDocument> {
-    return this.db().collection<MongoChatLogDocument>('chat_logs');
+  chatLogs(): Collection<ChatLogEntry> {
+    return this.db().collection<ChatLogEntry>('chat_logs');
   }
 
   /**
@@ -138,9 +114,9 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
    * por idioma) en vez de un único documento, para no chocar con el
    * límite de 16MB por documento de MongoDB a medida que crece el cache.
    */
-  translations(language: string): Collection<MongoTranslationDocument> {
+  translations(language: string): Collection<TranslationCacheEntry> {
     const slug = this.translationCollectionSlug(language);
-    const collection = this.db().collection<MongoTranslationDocument>(`translations_${slug}`);
+    const collection = this.db().collection<TranslationCacheEntry>(`translations_${slug}`);
     void this.ensureTranslationIndexes(collection);
     return collection;
   }
@@ -159,7 +135,7 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
 
   private readonly translationIndexesEnsured = new Set<string>();
 
-  private async ensureTranslationIndexes(collection: Collection<MongoTranslationDocument>): Promise<void> {
+  private async ensureTranslationIndexes(collection: Collection<TranslationCacheEntry>): Promise<void> {
     if (this.translationIndexesEnsured.has(collection.collectionName)) {
       return;
     }

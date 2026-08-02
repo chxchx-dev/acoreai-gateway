@@ -1,11 +1,15 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
-import { RagStoreService } from 'src/modules/rag/rag-store.service';
+import {
+  DOCUMENT_REPOSITORY_PORT,
+  DocumentRepositoryPort,
+} from 'src/application/ports/document-repository.port';
 import { chunkText } from 'src/modules/rag/utils/chunk-text.util';
 import { CreateDocumentDto } from 'src/interfaces/http/dto/documents/create-document.dto';
 
@@ -21,7 +25,8 @@ export class DocumentsService {
   private readonly logger = new Logger(DocumentsService.name);
 
   constructor(
-    private readonly ragStore: RagStoreService,
+    @Inject(DOCUMENT_REPOSITORY_PORT)
+    private readonly documents: DocumentRepositoryPort,
     private readonly aiOrchestrator: AiOrchestratorService,
     private readonly config: ConfigService,
   ) {}
@@ -34,7 +39,7 @@ export class DocumentsService {
       throw new BadRequestException('El contenido no generó chunks válidos');
     }
 
-    const document = await this.ragStore.createDocument({
+    const document = await this.documents.createDocument({
       title: dto.title,
       source: dto.source,
       type: 'text',
@@ -55,7 +60,7 @@ export class DocumentsService {
       embedding: embeddings[i] ?? [],
     }));
 
-    await this.ragStore.createChunks(
+    await this.documents.createChunks(
       document.id,
       document.title,
       chunkRecords,
@@ -73,7 +78,7 @@ export class DocumentsService {
   }
 
   async findAll() {
-    const docs = await this.ragStore.listDocuments();
+    const docs = await this.documents.listDocuments();
     return docs.map((d) => ({
       id: d.id,
       title: d.title,
@@ -85,7 +90,7 @@ export class DocumentsService {
   }
 
   async findOne(id: string) {
-    const doc = await this.ragStore.findDocumentWithChunks(id);
+    const doc = await this.documents.findDocumentWithChunks(id);
     return {
       id: doc.id,
       title: doc.title,
@@ -101,6 +106,6 @@ export class DocumentsService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.ragStore.deleteDocument(id);
+    await this.documents.deleteDocument(id);
   }
 }

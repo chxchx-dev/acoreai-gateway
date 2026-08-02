@@ -1,6 +1,6 @@
 import {
   BadRequestException,
-  Body, Controller, Delete, Get, HttpCode, HttpStatus, Param,
+  Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param,
   Post, Query, Req, Res, UseGuards,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -14,8 +14,14 @@ import { DeviceLockGuard } from '../guards/device-lock.guard';
 import { TranslateRequestDto } from '../dto/translate/translate-request.dto';
 import { TranslationCacheQueryDto } from '../dto/translate/translation-cache-query.dto';
 import { TranslateService } from 'src/modules/translate/translate.service';
-import { TranslationSaveService } from 'src/modules/translate/translation-save.service';
-import { TranslationCacheService } from 'src/modules/translate/translation-cache.service';
+import {
+  TRANSLATION_SAVE_REPOSITORY_PORT,
+  TranslationSaveRepositoryPort,
+} from 'src/application/ports/translation-save-repository.port';
+import {
+  TRANSLATION_CACHE_PORT,
+  TranslationCachePort,
+} from 'src/application/ports/translation-cache.port';
 import { JwtPayload } from 'src/modules/auth/auth.service';
 import { UserRole } from 'src/domain/auth/user-role';
 
@@ -56,8 +62,10 @@ function isAdmin(req: Request): boolean {
 export class TranslateController {
   constructor(
     private readonly translateService: TranslateService,
-    private readonly translationSaveService: TranslationSaveService,
-    private readonly translationCacheService: TranslationCacheService,
+    @Inject(TRANSLATION_SAVE_REPOSITORY_PORT)
+    private readonly translationSaveService: TranslationSaveRepositoryPort,
+    @Inject(TRANSLATION_CACHE_PORT)
+    private readonly translationCacheService: TranslationCachePort,
   ) {}
 
   @UseGuards(ApiKeyOrJwtGuard)

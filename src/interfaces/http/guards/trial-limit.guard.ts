@@ -3,11 +3,15 @@ import {
   ExecutionContext,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
 } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { Request } from 'express';
-import { TrialService } from 'src/modules/trial/trial.service';
+import {
+  TRIAL_USAGE_REPOSITORY_PORT,
+  TrialUsageRepositoryPort,
+} from 'src/application/ports/trial-usage-repository.port';
 
 const TRIAL_LIMIT = 3;
 
@@ -18,7 +22,10 @@ export interface TrialRequest extends Request {
 
 @Injectable()
 export class TrialLimitGuard implements CanActivate {
-  constructor(private readonly trialService: TrialService) {}
+  constructor(
+    @Inject(TRIAL_USAGE_REPOSITORY_PORT)
+    private readonly trialService: TrialUsageRepositoryPort,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<TrialRequest>();

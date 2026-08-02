@@ -3,21 +3,10 @@ import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { RagChunk } from 'src/domain/rag/rag-chunk';
-
-export interface RagDocument {
-  id: string;
-  title: string;
-  source?: string;
-  type: string;
-  createdAt: string;
-}
+import { RagDocument, RagDocumentWithChunks } from 'src/domain/rag/rag-document';
 
 /** Alias local: la forma canónica vive en src/domain/rag/rag-chunk.ts. */
 export type RagChunkRecord = RagChunk;
-
-export interface RagDocumentWithChunks extends RagDocument {
-  chunks: Omit<RagChunkRecord, 'docTitle' | 'score'>[];
-}
 
 interface DocumentRow {
   id: string;

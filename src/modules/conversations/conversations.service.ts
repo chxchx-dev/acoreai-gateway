@@ -9,73 +9,19 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { ObservabilityService } from 'src/infrastructure/observability/observability.service';
 import { MongoService } from 'src/infrastructure/database/mongodb/mongodb.service';
-import { ConversationMessagesQueryDto } from 'src/interfaces/http/dto/conversations/conversation-messages-query.dto';
-import { ConversationsQueryDto } from 'src/interfaces/http/dto/conversations/conversations-query.dto';
-import { CreateConversationDto } from 'src/interfaces/http/dto/conversations/create-conversation.dto';
-
-export type ConversationRole = 'user' | 'assistant';
-export type ConversationMessageStatus = 'saved' | 'error' | 'no_context';
-
-export interface CachedConversation {
-  id: string;
-  userId?: string;
-  source?: string;
-  title?: string;
-  status: 'active' | 'archived';
-  summary?: string;
-  summaryUpdatedAt?: string;
-  summarizedMessageCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CachedConversationMessage {
-  id: string;
-  conversationId: string;
-  role: ConversationRole;
-  content: string;
-  model?: string;
-  status: ConversationMessageStatus;
-  errorMessage?: string;
-  sources?: unknown;
-  chunksUsed: number;
-  createdAt: string;
-}
-
-interface ResolveConversationInput {
-  conversationId?: string;
-  userId?: string;
-  source?: string;
-}
-
-interface AppendMessageInput {
-  conversationId: string;
-  role: ConversationRole;
-  content: string;
-  model?: string;
-  status?: ConversationMessageStatus;
-  errorMessage?: string;
-  sources?: unknown;
-  chunksUsed?: number;
-}
-
-export interface ConversationsListResult {
-  items: CachedConversation[];
-  total: number;
-}
-
-export interface ConversationMessagesResult {
-  conversationId: string;
-  items: CachedConversationMessage[];
-  total: number;
-}
-
-export interface ConversationSummaryWork {
-  conversationId: string;
-  currentSummary?: string;
-  messages: CachedConversationMessage[];
-  summarizeUpToCount: number;
-}
+import {
+  AppendMessageInput,
+  CachedConversation,
+  CachedConversationMessage,
+  ConversationMessageStatus,
+  ConversationMessagesQuery,
+  ConversationMessagesResult,
+  ConversationSummaryWork,
+  ConversationsListResult,
+  CreateConversationInput,
+  ListConversationsQuery,
+  ResolveConversationInput,
+} from 'src/domain/conversations/conversation';
 
 @Injectable()
 export class ConversationsService {
@@ -143,7 +89,7 @@ export class ConversationsService {
   }
 
   async createConversation(
-    input: CreateConversationDto,
+    input: CreateConversationInput,
   ): Promise<CachedConversation> {
     const conversation = await this.resolveConversation({
       userId: input.userId,
@@ -159,7 +105,7 @@ export class ConversationsService {
   }
 
   async listConversations(
-    query: ConversationsQueryDto,
+    query: ListConversationsQuery,
   ): Promise<ConversationsListResult> {
     const limit = Math.min(query.limit ?? 20, 100);
     const status = query.status ?? 'active';
@@ -184,7 +130,7 @@ export class ConversationsService {
 
   async getConversationMessages(
     conversationId: string,
-    query: ConversationMessagesQueryDto,
+    query: ConversationMessagesQuery,
   ): Promise<ConversationMessagesResult> {
     await this.assertConversationAccess(conversationId, query.userId);
 

@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Inject, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { Request } from 'express';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { KnowledgePermissionGuard } from '../guards/knowledge-permission.guard';
 import { RequireKnowledgeAction } from '../decorators/knowledge-action.decorator';
 import { CreateKnowledgeWatcherDto, SetWatcherStatusDto } from '../dto/knowledge/create-knowledge-watcher.dto';
-import { KnowledgeWatcherService } from 'src/modules/knowledge/watchers/knowledge-watcher.service';
+import {
+  KNOWLEDGE_WATCHER_REPOSITORY_PORT,
+  KnowledgeWatcherRepositoryPort,
+} from 'src/application/ports/knowledge-watcher-repository.port';
 import { JwtPayload } from 'src/modules/auth/auth.service';
 
 function jwtUser(req: Request): JwtPayload {
@@ -18,7 +21,10 @@ function jwtUser(req: Request): JwtPayload {
 @RequireKnowledgeAction('edit_metadata')
 @Controller('knowledge/watchers')
 export class KnowledgeWatchersController {
-  constructor(private readonly knowledgeWatcherService: KnowledgeWatcherService) {}
+  constructor(
+    @Inject(KNOWLEDGE_WATCHER_REPOSITORY_PORT)
+    private readonly knowledgeWatcherService: KnowledgeWatcherRepositoryPort,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateKnowledgeWatcherDto, @Req() req: Request) {

@@ -3,16 +3,7 @@ import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service
 import { XpSourceType } from '@prisma/client';
 import { computeLevelUp } from 'src/domain/languages/xp-policy';
 import { getTitleCodesForLevel } from 'src/domain/languages/title-policy';
-
-export interface XpAwardResult {
-  xpAwarded: number;
-  totalXp: number;
-  currentXp: number;
-  currentLevel: number;
-  leveledUp: boolean;
-  levelsGained: number;
-  unlockedTitleCodes: string[];
-}
+import { XpAwardResult } from 'src/domain/languages/xp-award-result';
 
 @Injectable()
 export class LanguageXpService {

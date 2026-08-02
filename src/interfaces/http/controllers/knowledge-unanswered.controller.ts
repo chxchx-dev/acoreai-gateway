@@ -1,11 +1,14 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
 import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { KnowledgePermissionGuard } from '../guards/knowledge-permission.guard';
 import { RequireKnowledgeAction } from '../decorators/knowledge-action.decorator';
-import { KnowledgeSearchService } from 'src/modules/knowledge/retrieval/knowledge-search.service';
+import {
+  KNOWLEDGE_SEARCH_REPOSITORY_PORT,
+  KnowledgeSearchRepositoryPort,
+} from 'src/application/ports/knowledge-search-repository.port';
 
 class UnansweredQueryDto {
   @IsOptional()
@@ -26,7 +29,10 @@ class UnansweredQueryDto {
 @RequireKnowledgeAction('supervise_tools')
 @Controller('knowledge/unanswered-questions')
 export class KnowledgeUnansweredController {
-  constructor(private readonly knowledgeSearchService: KnowledgeSearchService) {}
+  constructor(
+    @Inject(KNOWLEDGE_SEARCH_REPOSITORY_PORT)
+    private readonly knowledgeSearchService: KnowledgeSearchRepositoryPort,
+  ) {}
 
   @Get()
   list(@Query() query: UnansweredQueryDto) {

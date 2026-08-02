@@ -1,37 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Filter } from 'mongodb';
-import {
-  MongoChatLogDocument,
-  MongoService,
-} from 'src/infrastructure/database/mongodb/mongodb.service';
-import { LogsQueryDto } from 'src/interfaces/http/dto/logs/logs-query.dto';
+import { MongoService } from 'src/infrastructure/database/mongodb/mongodb.service';
 import { randomUUID } from 'crypto';
-
-export interface CreateLogInput {
-  userId?: string;
-  conversationId?: string;
-  source?: string;
-  question: string;
-  answer?: string | null;
-  model: string;
-  status: string;
-  errorMessage?: string;
-  durationMs?: number;
-  chunksUsed?: number;
-  sources?: unknown;
-}
-
-export interface ConversationSummary {
-  conversationId: string;
-  title: string;
-  messageCount: number;
-  lastMessageAt: Date;
-}
-
-export interface LogsListResult {
-  items: Partial<MongoChatLogDocument>[];
-  total: number;
-}
+import {
+  ChatLogEntry,
+  ConversationSummary,
+  CreateLogInput,
+  ExportLogsFilters,
+  LogsListResult,
+  LogsQuery,
+} from 'src/domain/logs/chat-log';
 
 @Injectable()
 export class LogsService {
@@ -91,10 +69,10 @@ export class LogsService {
     }));
   }
 
-  async findAll(query: LogsQueryDto): Promise<LogsListResult> {
+  async findAll(query: LogsQuery): Promise<LogsListResult> {
     const { limit = 20, status, source, userId, conversationId } = query;
 
-    const where: Filter<MongoChatLogDocument> = {};
+    const where: Filter<ChatLogEntry> = {};
     if (status) where.status = status;
     if (source) where.source = source;
     if (userId) where.userId = userId;
@@ -128,16 +106,10 @@ export class LogsService {
     return { items, total };
   }
 
-  async exportLogs(filters: {
-    status?: string;
-    source?: string;
-    userId?: string;
-    from?: string;
-    to?: string;
-  }): Promise<Partial<MongoChatLogDocument>[]> {
+  async exportLogs(filters: ExportLogsFilters): Promise<Partial<ChatLogEntry>[]> {
     const MAX_EXPORT_ROWS = 50000;
 
-    const where: Filter<MongoChatLogDocument> = {};
+    const where: Filter<ChatLogEntry> = {};
     if (filters.status) where.status = filters.status;
     if (filters.source) where.source = filters.source;
     if (filters.userId) where.userId = filters.userId;
@@ -155,7 +127,7 @@ export class LogsService {
       .toArray();
   }
 
-  async findOne(id: string): Promise<MongoChatLogDocument> {
+  async findOne(id: string): Promise<ChatLogEntry> {
     const log = await this.mongo.chatLogs().findOne(
       { id },
       {

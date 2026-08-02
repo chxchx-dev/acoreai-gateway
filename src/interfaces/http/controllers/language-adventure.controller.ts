@@ -1,14 +1,29 @@
 import {
-  Controller, Get, Post, Body, Param, UseGuards, Req, HttpCode, HttpStatus,
+  Controller, Get, Post, Body, Inject, Param, UseGuards, Req, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { ApiKeyGuard } from '../guards/api-key.guard';
-import { LanguageProfileService } from 'src/modules/languages/application/services/language-profile.service';
-import { LanguageLessonService } from 'src/modules/languages/application/services/language-lesson.service';
-import { LanguageExamService } from 'src/modules/languages/application/services/language-exam.service';
-import { AdventureGenerationService } from 'src/modules/languages/application/services/adventure-generation.service';
-import { HiddenLevelService } from 'src/modules/languages/application/services/hidden-level.service';
+import {
+  LANGUAGE_PROFILE_REPOSITORY_PORT,
+  LanguageProfileRepositoryPort,
+} from 'src/application/ports/language-profile-repository.port';
+import {
+  LANGUAGE_LESSON_REPOSITORY_PORT,
+  LanguageLessonRepositoryPort,
+} from 'src/application/ports/language-lesson-repository.port';
+import {
+  LANGUAGE_EXAM_REPOSITORY_PORT,
+  LanguageExamRepositoryPort,
+} from 'src/application/ports/language-exam-repository.port';
+import {
+  ADVENTURE_GENERATION_REPOSITORY_PORT,
+  AdventureGenerationRepositoryPort,
+} from 'src/application/ports/adventure-generation-repository.port';
+import {
+  HIDDEN_LEVEL_REPOSITORY_PORT,
+  HiddenLevelRepositoryPort,
+} from 'src/application/ports/hidden-level-repository.port';
 
 interface JwtUser { sub: string; email: string; role: string; }
 
@@ -16,11 +31,16 @@ interface JwtUser { sub: string; email: string; role: string; }
 @UseGuards(ApiKeyGuard, JwtAuthGuard)
 export class LanguageAdventureController {
   constructor(
-    private readonly profileService: LanguageProfileService,
-    private readonly lessonService: LanguageLessonService,
-    private readonly examService: LanguageExamService,
-    private readonly generationService: AdventureGenerationService,
-    private readonly hiddenLevelService: HiddenLevelService,
+    @Inject(LANGUAGE_PROFILE_REPOSITORY_PORT)
+    private readonly profileService: LanguageProfileRepositoryPort,
+    @Inject(LANGUAGE_LESSON_REPOSITORY_PORT)
+    private readonly lessonService: LanguageLessonRepositoryPort,
+    @Inject(LANGUAGE_EXAM_REPOSITORY_PORT)
+    private readonly examService: LanguageExamRepositoryPort,
+    @Inject(ADVENTURE_GENERATION_REPOSITORY_PORT)
+    private readonly generationService: AdventureGenerationRepositoryPort,
+    @Inject(HIDDEN_LEVEL_REPOSITORY_PORT)
+    private readonly hiddenLevelService: HiddenLevelRepositoryPort,
   ) {}
 
   private user(req: Request): JwtUser {

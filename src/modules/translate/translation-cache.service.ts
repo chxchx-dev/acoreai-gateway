@@ -1,28 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { Filter } from 'mongodb';
-import { MongoService, MongoTranslationDocument } from 'src/infrastructure/database/mongodb/mongodb.service';
+import { MongoService } from 'src/infrastructure/database/mongodb/mongodb.service';
+import {
+  TranslationCacheEntry,
+  TranslationCacheListQuery,
+  TranslationCacheListResult,
+  TranslationCacheLanguageStats,
+} from 'src/domain/translate/translation-cache-entry';
 import { LANGUAGE_NAMES } from './translate.service';
-
-export interface TranslationCacheListQuery {
-  language: string;
-  search?: string;
-  page?: number;
-  pageSize?: number;
-}
-
-export interface TranslationCacheListResult {
-  items: MongoTranslationDocument[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-export interface TranslationCacheLanguageStats {
-  language: string;
-  entries: number;
-  totalHits: number;
-}
 
 @Injectable()
 export class TranslationCacheService {
@@ -73,7 +59,7 @@ export class TranslationCacheService {
   async list(query: TranslationCacheListQuery): Promise<TranslationCacheListResult> {
     const page = Math.max(query.page ?? 1, 1);
     const pageSize = Math.min(Math.max(query.pageSize ?? 20, 1), 100);
-    const where: Filter<MongoTranslationDocument> = {};
+    const where: Filter<TranslationCacheEntry> = {};
     if (query.search) {
       const regex = new RegExp(this.escapeRegex(query.search), 'i');
       where.$or = [{ sourceText: regex }, { translation: regex }];
