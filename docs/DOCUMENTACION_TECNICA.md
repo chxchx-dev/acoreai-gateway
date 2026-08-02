@@ -171,12 +171,49 @@ Importante: actualmente este módulo modela y administra el procedimiento, pero 
 ┌───────────────┐       ┌───────────────┐
 │ Ollama remoto │       │ TTS/STT Python│
 └───────────────┘       └───────────────┘
-
-              ┌────────────────────┐
-              │ Knowledge Admin    │
-              │ React + Vite       │
-              └────────────────────┘
 ```
+
+### 4.1 Cómo encaja esto en arquitectura hexagonal
+
+El diagrama anterior es el mapa de **despliegue** (qué proceso habla con cuál). La arquitectura hexagonal es otro mapa, ortogonal a ese: describe cómo está organizado el **código** por dentro del gateway, no cómo se despliegan sus piezas.
+
+La idea del hexágono es simple: hay un **núcleo** con las reglas de negocio, que no sabe nada de HTTP, NestJS, Prisma, MongoDB ni Ollama. Todo lo que entra o sale del núcleo pasa por **puertos** (interfaces definidas por el propio núcleo) y se conecta al mundo real mediante **adapters** que implementan esos puertos. El núcleo nunca importa un adapter directamente — depende de la interfaz, nunca de la implementación concreta.
+
+```text
+   ADAPTERS PRIMARIOS                 NÚCLEO                    ADAPTERS SECUNDARIOS
+   (entrada / "izquierda")      (dominio + aplicación)           (salida / "derecha")
+   piden cosas al núcleo                                      el núcleo les pide cosas
+
+┌─────────────────────┐                                        ┌─────────────────────┐
+│ Controllers HTTP     │                                        │ OllamaAdapter        │
+│ src/interfaces/http/ │──┐                                  ┌──│ (implementa LlmPort) │
+└─────────────────────┘  │        ┌──────────────────┐        │└─────────────────────┘
+                          │        │  src/domain/      │        │
+┌─────────────────────┐  ├───────▶│  reglas puras     │───────▶│┌─────────────────────┐
+│ Guards (JWT, API key)│  │        │                   │        ││ *RepositoryAdapter   │
+└─────────────────────┘  │        │  src/application/ │        ││ (Prisma / MongoDB)   │
+                          │        │  puertos + casos  │        │└─────────────────────┘
+┌─────────────────────┐  │        │  de uso           │        │
+│ Cron / SchedulerReg. │──┘        └──────────────────┘        │┌─────────────────────┐
+│ (KnowledgeWatcher)   │                                        ││ SttAdapter/TtsAdapter │
+└─────────────────────┘                                        │└─────────────────────┘
+                                                                 └─────────────────────┘
+```
+
+Con nombres de archivos reales del proyecto:
+
+| Concepto hexagonal | Carpeta en este repo | Ejemplo concreto |
+|---|---|---|
+| Núcleo — reglas de negocio | `src/domain/` | `src/domain/languages/xp-policy.ts` (cálculo de subida de nivel, sin tocar Prisma) |
+| Núcleo — puertos (interfaces) | `src/application/ports/` | `LlmPort`, `ConversationRepositoryPort`, `UserRepositoryPort` |
+| Núcleo — casos de uso | `src/application/use-cases/` | `AskQuestionUseCase` (el único flujo con lógica de orquestación suficiente para justificar uno) |
+| Adapter primario (entrada) | `src/interfaces/http/controllers/` | `chat.controller.ts` recibe el HTTP y llama al puerto/caso de uso |
+| Adapter secundario (salida) | `src/infrastructure/` | `ollama.adapter.ts`, `conversation-repository.adapter.ts`, `stt.adapter.ts` |
+| Composición de DI (quién conecta puerto ↔ adapter) | `src/modules/*/*.module.ts` | `{ provide: LLM_PORT, useExisting: OllamaAdapter }` |
+
+La regla que hace que esto sea "hexagonal" y no solo "capas": la flecha de dependencia siempre apunta **hacia adentro**. Un controller puede importar un puerto; un adapter puede importar un puerto (para implementarlo); pero nada dentro de `src/domain/` o `src/application/` importa jamás algo de `src/infrastructure/` o de un `*.controller.ts`. Eso es lo que permite, por ejemplo, cambiar Ollama por otro proveedor de LLM sin tocar una sola línea de `ChatService`: solo haría falta un `NuevoProveedorAdapter` nuevo que implemente `LlmPort`.
+
+La sección 5.1 (más abajo) detalla la convención concreta para escribir un puerto/adapter nuevo, con ejemplos de código.
 
 ## 5. Organización del código
 
@@ -190,7 +227,6 @@ src/
 └── config/              Configuración y validación de entorno
 
 web/
-├── acoreai/                Aplicación web ACoreAI
 ├── acoreai/              Aplicación web ACoreAI
 └── admin/               Panel de administración del conocimiento
 
@@ -207,10 +243,98 @@ prisma/
 La estructura sigue una combinación de Clean Architecture, arquitectura modular de NestJS y Ports & Adapters:
 
 - El dominio contiene reglas que no deberían depender de bases de datos o HTTP.
-- La aplicación define casos de uso y puertos como `LlmPort` y `VectorStorePort`.
-- La infraestructura implementa esos puertos con Ollama y pgvector.
-- La capa HTTP traduce peticiones externas a DTOs y llama los casos de uso.
-- Los módulos agrupan capacidades de negocio como chat, RAG, auth, idiomas y conocimiento.
+- La aplicación define casos de uso y puertos.
+- La infraestructura implementa esos puertos con Prisma, MongoDB, Ollama y pgvector.
+- La capa HTTP traduce peticiones externas a DTOs y llama al puerto o caso de uso correspondiente.
+- Los módulos agrupan capacidades de negocio como chat, RAG, auth, idiomas, automatización y conocimiento, y son el punto de composición de la inyección de dependencias.
+
+### 5.1 Convención de puertos y adapters (arquitectura hexagonal)
+
+Hasta una migración reciente, el patrón Ports & Adapters solo se aplicaba al flujo de IA (`LlmPort`, `VectorStorePort`). Se generalizó a **todo el proyecto**: ningún servicio en `src/modules/*` inyecta `PrismaService`/`MongoService` directamente — todos pasan por un puerto y un adapter.
+
+```text
+src/domain/<módulo>/              tipos y reglas de negocio puras, sin Prisma/Mongo/HTTP
+src/application/ports/            token Symbol + interfaz de cada puerto
+src/application/use-cases/        orquestan 2+ puertos (solo donde hay lógica real, ver regla abajo)
+src/infrastructure/<tecnología>/   adapters que implementan un puerto
+src/modules/<módulo>/*.module.ts  composición de DI: providers + { provide: PORT, useExisting: Adapter }
+```
+
+Dos tipos de puertos:
+
+- **Puertos de capacidad** (envuelven un servicio externo sin estado): `LlmPort`, `SttPort`, `TtsPort`.
+- **Puertos de repositorio** (uno por agregado, ocultan Prisma/Mongo): por ejemplo `ConversationRepositoryPort`, `KnowledgeSourceRepositoryPort`, `UserRepositoryPort`, `AutomationProcessRepositoryPort`.
+
+**Ejemplo — puerto de capacidad** (`src/application/ports/llm.port.ts`):
+
+```ts
+export const LLM_PORT = Symbol('LLM_PORT');
+export interface LlmPort {
+  chat(params: ChatParams): Promise<ChatResult>;
+  chatStream(params: ChatParams, signal?: AbortSignal): AsyncGenerator<ChatStreamChunk>;
+  embed(input: string | string[]): Promise<number[][]>;
+  resolveAvailableModelName(modelName: string): Promise<string | null>;
+}
+```
+
+`ChatParams`/`ChatResult`/`ChatStreamChunk` viven en `src/domain/ai/llm.types.ts` — tipos propios del dominio, no del SDK de Ollama. El adapter (`src/infrastructure/llm/ollama.adapter.ts`) es quien traduce entre el wire format de Ollama y esos tipos; si Ollama cambiara de forma, solo el adapter se entera.
+
+**Ejemplo — puerto de repositorio sobre un servicio ya bien encapsulado** (`src/application/ports/knowledge-source-repository.port.ts`):
+
+```ts
+export const KNOWLEDGE_SOURCE_REPOSITORY_PORT = Symbol('KNOWLEDGE_SOURCE_REPOSITORY_PORT');
+export type KnowledgeSourceRepositoryPort = Pick<
+  KnowledgeSourcesService,
+  'create' | 'createFromUpload' | 'findAll' | 'findOne' | 'update' | 'createNewVersion' | /* ... */
+>;
+```
+
+Cuando el servicio ya devuelve estructuras de Prisma con includes anidados (el caso más común en Knowledge, Languages y Automation), el puerto deriva su forma con `Pick<>` sobre la propia clase concreta en vez de reescribir a mano cada tipo de retorno. Es un `import type`, se borra en compilación — cero acoplamiento en runtime entre el puerto y el módulo.
+
+**Ejemplo — puerto de repositorio con doble almacenamiento** (`src/application/ports/conversation-repository.port.ts`): un solo puerto compone Postgres (fuente de verdad) y MongoDB (caché/working-set con TTL) para el mismo agregado. El consumidor pide "la conversación", no "la mitad de Postgres" y "la mitad de Mongo" por separado — esa fusión la resuelve el adapter internamente.
+
+**Registro en el módulo** (siempre el mismo patrón, ya usado desde el `LlmPort` original):
+
+```ts
+providers: [
+  ServicioConcreto,
+  AdaptadorConcreto,
+  { provide: PORT_TOKEN, useExisting: AdaptadorConcreto },
+],
+```
+
+**Regla para use-cases:** un caso de uso en `application/use-cases/` solo se crea cuando el endpoint orquesta dos o más puertos o tiene lógica de aplicación no trivial más allá de validar y delegar. Forzar un use-case que solo llama a un método de un puerto sería la sobre-ingeniería que justamente se quiere evitar.
+
+| Flujo | ¿Usa use-case? | Motivo |
+|---|---|---|
+| Chat (`ask` / `stream` / `streamPerspectives`) | Sí — `AskQuestionUseCase`, `StreamChatUseCase`, `StreamPerspectivesUseCase` | Orquesta `LLM_PORT`, RAG, conversaciones y logs en un solo flujo |
+| Auth, conversations, knowledge, languages, automation, translate, tts, stt, trial, device | No — el controller inyecta el puerto directo | CRUD/orquestación de un solo agregado; un use-case sería una capa vacía encima del puerto |
+
+**Diagrama de wiring de DI, antes y después:**
+
+```text
+Antes (solo el flujo de IA en hexagonal; el resto acoplado a Prisma/Mongo):
+
+Controller ──► Servicio concreto ──► PrismaService / MongoService (directo)
+Controller ──► AiOrchestratorService ──► LLM_PORT ──► OllamaAdapter ──► OllamaService
+
+Después (todo el proyecto):
+
+Controller ──► PUERTO (token) ──► Adapter ──► Servicio concreto ──► PrismaService / MongoService
+                                                 (Auth: Adapter ──► PrismaService directo, sin capa intermedia)
+```
+
+**Qué cambió concretamente en esta migración:**
+
+- Se corrigió la inversión de dependencia `application/use-cases → modules/chat` (el use-case ahora depende de `application/services/chat`, no al revés).
+- Se sacaron los tipos de infraestructura que `LlmPort` y `VectorStorePort` filtraban.
+- Se creó una red mínima de tests de humo (`test/smoke/`, `pnpm test`) contra Postgres/Mongo de prueba reales, con `LLM_PORT` sustituido por un fake determinista — sirve de red de regresión para refactors futuros, no reemplaza la suite completa de pruebas pendiente en la sección 13.
+- Se migraron a puertos de repositorio: `RagStoreService` (documentos), `TranslationSaveService`/`TranslationCacheService`, `TrialService`, `DeviceService`, `LogsService` (chat logs), `ConversationsService`, los 7 servicios de `languages/`, los 2 servicios de `automation/`, los 9 servicios restantes de `knowledge/`, y `AuthService`.
+- `AdventureGenerationService` dejó de inyectar `OllamaService` directo y ahora usa `LLM_PORT`.
+- `AuthService` ya no depende de `PrismaService`: se extrajeron `UserRepositoryPort` y `AuthSessionRepositoryPort`, y se eliminó por completo el escape hatch `PrismaAny` (acceso a Prisma sin tipos) que existía antes.
+- `SttService`/`TtsService` quedaron detrás de `SttPort`/`TtsPort`, con el mismo patrón que `LlmPort`.
+
+**Importante:** esta migración fue puramente estructural (Ports & Adapters). Los puntos de la sección 13 — unificar los dos pipelines de chat, cerrar el contrato del RAG, la suite de tests completa, resiliencia de producción, revisión de secretos y storage S3 — siguen exactamente igual de pendientes; no se resolvieron como parte de este trabajo.
 
 ## 6. Flujo de una petición de chat
 
@@ -365,7 +489,6 @@ Servicios definidos en Docker Compose:
 | `acoreai-tts` | Servicio de texto a voz |
 | `acoreai-stt` | Servicio de voz a texto |
 | `acoreai-web` | Web ACoreAI servida por Nginx |
-| `acoreai-web` | Web ACoreAI servida por Nginx |
 | admin web | Panel administrativo, con configuración de desarrollo y producción |
 
 Ollama no está incluido en el Compose principal: se consume desde `MODEL_SERVER_URL`. En desarrollo puede ejecutarse en la máquina anfitriona; en producción se recomienda un servidor dedicado con GPU o recursos suficientes.
@@ -412,6 +535,8 @@ El sistema incluye:
 - Observabilidad y controles de seguridad.
 - Modelo de datos de aprendizaje de idiomas.
 - Modelo administrativo de automatizaciones.
+- Arquitectura hexagonal (Ports & Adapters) generalizada a todo el proyecto — ver sección 5.1.
+- Red de tests de humo (`test/smoke/`) contra Postgres/Mongo de prueba reales.
 
 ### Parcial o requiere validación funcional
 
@@ -436,7 +561,7 @@ El sistema incluye:
 
 1. **Unificar los pipelines de chat.** Definir un único orquestador para historial, decisión de RAG, construcción de prompt, respuesta y persistencia.
 2. **Cerrar el contrato del RAG.** Asegurar que todas las rutas filtren siempre por `published`, vigencia, idioma, área y permisos.
-3. **Pruebas automatizadas.** Añadir unit tests para políticas, chunking, score RAG, auth, XP y publicación; además de pruebas e2e para login, chat y workflow de conocimiento.
+3. **Pruebas automatizadas.** Ya existe un arnés mínimo (`test/smoke/`, `pnpm test`, 6 tests contra Postgres/Mongo de prueba reales) usado como red de regresión durante la migración a hexagonal — falta la suite real: unit tests para políticas, chunking, score RAG, auth, XP y publicación; además de pruebas e2e para login, chat y workflow de conocimiento.
 4. **Validar producción.** Probar recuperación ante caída de Ollama, MongoDB, PostgreSQL, TTS y STT, incluyendo timeouts y mensajes degradados.
 5. **Revisar secretos.** Mantener claves, passwords y URLs sensibles fuera del repositorio y rotarlas por entorno.
 6. **Definir estrategia de almacenamiento de archivos.** Para producción, migrar de disco local a almacenamiento S3 compatible o equivalente.
