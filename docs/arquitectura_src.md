@@ -2,6 +2,10 @@
 
 Este gateway usa un monolito modular con arquitectura hexagonal. La idea es escalar primero con limites internos claros y despues extraer modulos a servicios separados cuando el trafico o el equipo lo requieran.
 
+## Dirección del sistema
+
+El código implementa la base técnica de **ACoreAI: una plataforma modular para construir asistentes empresariales conectados a conocimiento privado**. La prioridad arquitectónica es proteger y hacer trazable el ciclo de conocimiento: cargar, revisar, versionar, publicar y consultar información empresarial con fuentes controladas. Las reglas completas viven en [`DIRECCION_PRODUCTO.md`](DIRECCION_PRODUCTO.md).
+
 ## Estructura
 
 ```txt
@@ -19,6 +23,8 @@ src/
 ## Regla principal
 
 Los controladores HTTP no deben contener logica de negocio. Deben validar entrada, resolver contexto de autenticacion y delegar en servicios/casos de uso.
+
+Todo código nuevo debe justificar cómo ayuda a los asistentes empresariales, al ciclo de conocimiento privado o a una capacidad transversal reutilizable. Las funcionalidades auxiliares no deben convertir el gateway en un producto aislado o en un chatbot genérico.
 
 ## Capas
 

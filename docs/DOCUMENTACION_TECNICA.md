@@ -2,16 +2,18 @@
 
 > Documento de referencia del estado actual del proyecto. Describe la implementación encontrada en el repositorio y separa las capacidades disponibles de las mejoras pendientes.
 
+> **Dirección obligatoria:** ACoreAI es una plataforma modular de inteligencia artificial para construir asistentes empresariales conectados a conocimiento privado. El problema, la solución y las reglas que guían las decisiones futuras están definidos en [`DIRECCION_PRODUCTO.md`](DIRECCION_PRODUCTO.md).
+
 ## 1. Resumen ejecutivo
 
-ACoreAI Gateway es un backend centralizado construido con NestJS y TypeScript que funciona como puerta de entrada segura hacia modelos de lenguaje servidos por Ollama. El gateway concentra la lógica de inteligencia artificial, autenticación, conversaciones, recuperación semántica de conocimiento, traducción, voz, observabilidad y reglas de negocio.
+ACoreAI Gateway es el núcleo backend de una plataforma modular para asistentes empresariales conectados a conocimiento privado. Está construido con NestJS y TypeScript y funciona como puerta de entrada segura hacia modelos de lenguaje servidos por Ollama. El gateway concentra la lógica de inteligencia artificial, autenticación, conversaciones, recuperación semántica de conocimiento, revisión y publicación documental, traducción, voz, observabilidad y reglas de negocio.
 
 El repositorio incluye dos interfaces web:
 
 - **ACoreAI Web:** interfaz de chat y práctica de idiomas.
 - **Knowledge Admin:** panel administrativo para gestionar fuentes de conocimiento, revisiones, publicación, auditoría y procesos de automatización.
 
-La arquitectura está preparada para reutilizar el gateway con distintas aplicaciones cliente, mientras que el modelo Ollama puede ejecutarse en un servidor separado. La solución se despliega con Docker Compose.
+La arquitectura está preparada para reutilizar el gateway con distintos asistentes y aplicaciones cliente empresariales, mientras que el modelo Ollama puede ejecutarse en un servidor separado. La solución se despliega con Docker Compose.
 
 ## 2. Qué se ha realizado
 

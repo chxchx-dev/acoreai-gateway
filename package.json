@@ -1,7 +1,7 @@
 {
   "name": "acoreai-gateway",
   "version": "0.1.0",
-  "description": "Gateway seguro entre ACoreAI y Ollama",
+  "description": "Modular AI platform for enterprise assistants connected to private knowledge",
   "scripts": {
     "start": "NODE_PATH=dist node dist/src/main",
     "ios": "npx react-native run-ios",

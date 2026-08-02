@@ -1,17 +1,23 @@
 # ACoreAI Gateway
 
-Reusable AI gateway and product foundation for building chat, knowledge, voice, translation, and education-focused AI applications.
+Modular AI platform for building enterprise assistants connected to private, controlled knowledge.
 
 The project is intentionally structured as a template: ACoreAI provides the shared platform capabilities, while future products can add their own prompts, branding, domain modules, and client applications without rewriting the core gateway.
 
+## Product direction
+
+ACoreAI is a platform for companies whose manuals, policies, procedures, and operational documentation are dispersed and difficult to verify. It enables teams to load, review, version, publish, and query enterprise knowledge through AI assistants with controlled sources.
+
+The canonical product rule is documented in [`docs/DIRECCION_PRODUCTO.md`](docs/DIRECCION_PRODUCTO.md). Every new module, endpoint, screen, and integration should support this direction or be explicitly justified as a reusable platform extension.
+
 ## What this project is becoming
 
-ACoreAI is being developed as a reusable AI platform with four layers:
+ACoreAI is being developed as a reusable enterprise AI platform with four layers:
 
 1. **Gateway:** secure API, model policies, authentication, conversations, streaming, and observability.
 2. **Knowledge platform:** supervised RAG with document versioning, review, publication, embeddings, citations, and audit trails.
 3. **AI services:** chat, perspectives, translation, text-to-speech, speech-to-text, and language-learning workflows.
-4. **Product surfaces:** a reusable React web client and an administration panel that can be adapted for different AI products.
+4. **Product surfaces:** reusable assistant clients and an administration panel for enterprise knowledge operations.
 
 The platform is not a fine-tuning system and it does not learn autonomously from uploaded documents. Its knowledge workflow is controlled:
 
