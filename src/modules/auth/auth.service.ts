@@ -85,26 +85,26 @@ interface SeedUser {
 
 const DEFAULT_SEED_USERS: SeedUser[] = [
   {
-    email: 'programador10@olan.edu.co',
-    password: 'Alania.2026pr',
+    email: 'user1@example.com',
+    password: 'CHANGE_ME_PR_1',
     name: 'Programador 10',
     role: UserRole.ACADEMIC,
   },
   {
-    email: 'programador11@olan.edu.co',
-    password: 'Alania.2026pr',
+    email: 'user2@example.com',
+    password: 'CHANGE_ME_PR_2',
     name: 'Programador 11',
     role: UserRole.ACADEMIC,
   },
   {
-    email: 'programador12@olan.edu.co',
-    password: 'Alania.2026pr',
+    email: 'user3@example.com',
+    password: 'CHANGE_ME_PR_3',
     name: 'Programador 12',
     role: UserRole.ACADEMIC,
   },
   {
-    email: 'comercial1@olan.edu.co',
-    password: 'Alania.2026co',
+    email: 'user4@example.com',
+    password: 'CHANGE_ME_CO_1',
     name: 'Comercial 1',
     role: UserRole.ACADEMIC,
   },
@@ -359,130 +359,6 @@ export class AuthService implements OnModuleInit {
   }
 
   // ── Auth ───────────────────────────────────────────────────────────────────
-
-  async loginOlan(
-    identificacion: string,
-    password: string,
-    device?: SessionDeviceInfo,
-    force?: boolean,
-  ): Promise<AuthTokens> {
-    const apiUrl =
-      (this.config.get<string>('OLAN_PLATFORM_API_URL') ?? 'https://olan.com.co/app/api.asmx').replace(/\/+$/, '');
-    const url = `${apiUrl}/GetAccess?uEstudiante=${encodeURIComponent(identificacion)}&pEstudiante=${encodeURIComponent(password)}`;
-
-    let olanName: string = identificacion;
-    try {
-      const response = await fetch(url);
-      const data = (await response.json()) as Record<string, unknown>;
-      const results = data?.['result'] as Record<string, unknown>[] | undefined;
-      const first = results?.[0];
-      if (!first || first['success'] === false) {
-        throw new UnauthorizedException('Credenciales inválidas');
-      }
-      olanName = (first['nombre'] ?? first['name'] ?? identificacion) as string;
-    } catch (err) {
-      if (err instanceof UnauthorizedException) throw err;
-      this.logger.warn(`Error al contactar OLAN API: ${err}`);
-      throw new UnauthorizedException('No se pudo conectar con la plataforma OLAN');
-    }
-
-    const syntheticEmail = `${identificacion.trim().toLowerCase()}@olan.internal`;
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      create:     (q: unknown) => Promise<PrismaAny>;
-      update:     (q: unknown) => Promise<PrismaAny>;
-    };
-
-    let user = await client.findUnique({ where: { email: syntheticEmail } });
-    if (!user) {
-      user = await client.create({
-        data: {
-          email:        syntheticEmail,
-          passwordHash: await this.hashPassword(randomBytes(32).toString('hex')),
-          name:         olanName,
-          role:         UserRole.APP,
-        },
-        select: { id: true, email: true, name: true, role: true },
-      });
-    }
-
-    const authUser = {
-      id:    user['id']   as string,
-      email: user['email'] as string,
-      name:  user['name'] as string,
-      role:  user['role'] as UserRole,
-    };
-    await this.assertNoOtherActiveSession(authUser.id, device?.deviceId, force);
-    return this.issueTokens(authUser, device);
-  }
-
-  async loginOlanToken(
-    identificacion: string,
-    olanToken: string,
-    device?: SessionDeviceInfo,
-    force?: boolean,
-  ): Promise<AuthTokens> {
-    const apiUrl =
-      (this.config.get<string>('OLAN_PLATFORM_API_URL') ?? 'https://olan.com.co/app/api.asmx').replace(/\/+$/, '');
-    const url = `${apiUrl}/buscarTokenUsuario?identificacion=${encodeURIComponent(identificacion)}`;
-
-    let olanName: string = identificacion;
-    try {
-      const response = await fetch(url);
-      const data = (await response.json()) as Record<string, unknown>;
-      const results = data?.['result'] as Record<string, unknown>[] | undefined;
-      const first = results?.[0];
-      if (!first) {
-        throw new UnauthorizedException('Token inválido o usuario no encontrado');
-      }
-      const storedToken = first['token'] ?? first['Token'];
-      if (!storedToken || String(storedToken).trim() !== String(olanToken).trim()) {
-        throw new UnauthorizedException('Token inválido');
-      }
-      olanName = (first['nombre'] ?? first['name'] ?? identificacion) as string;
-    } catch (err) {
-      if (err instanceof UnauthorizedException) throw err;
-      this.logger.warn(`Error al verificar token OLAN: ${err}`);
-      throw new UnauthorizedException('No se pudo verificar el token con la plataforma OLAN');
-    }
-
-    const syntheticEmail = `${identificacion.trim().toLowerCase()}@olan.internal`;
-    const db     = this.prisma as unknown as PrismaAny;
-    const client = db['user'] as {
-      findUnique: (q: unknown) => Promise<PrismaAny | null>;
-      create:     (q: unknown) => Promise<PrismaAny>;
-      update:     (q: unknown) => Promise<PrismaAny>;
-    };
-
-    let user = await client.findUnique({ where: { email: syntheticEmail } });
-    if (!user) {
-      user = await client.create({
-        data: {
-          email:        syntheticEmail,
-          passwordHash: await this.hashPassword(randomBytes(32).toString('hex')),
-          name:         olanName,
-          role:         UserRole.APP,
-        },
-        select: { id: true, email: true, name: true, role: true },
-      });
-    } else if (user['name'] !== olanName) {
-      user = await client.update({
-        where: { email: syntheticEmail },
-        data:  { name: olanName },
-        select: { id: true, email: true, name: true, role: true },
-      });
-    }
-
-    const authUser = {
-      id:    user['id']    as string,
-      email: user['email'] as string,
-      name:  user['name']  as string,
-      role:  user['role']  as UserRole,
-    };
-    await this.assertNoOtherActiveSession(authUser.id, device?.deviceId, force);
-    return this.issueTokens(authUser, device);
-  }
 
   async login(
     email: string,

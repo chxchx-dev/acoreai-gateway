@@ -16,14 +16,14 @@ export class ObservabilityService implements OnModuleInit {
   readonly registry = new Registry();
 
   readonly httpRequestsTotal = new Counter({
-    name: 'olan_ai_gateway_http_requests_total',
+    name: 'acoreai_ai_gateway_http_requests_total',
     help: 'Total HTTP requests',
     labelNames: ['method', 'route', 'statusCode'] as const,
     registers: [this.registry],
   });
 
   readonly httpRequestDurationSeconds = new Histogram({
-    name: 'olan_ai_gateway_http_request_duration_seconds',
+    name: 'acoreai_ai_gateway_http_request_duration_seconds',
     help: 'HTTP request duration in seconds',
     labelNames: ['method', 'route', 'statusCode'] as const,
     buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30],
@@ -31,14 +31,14 @@ export class ObservabilityService implements OnModuleInit {
   });
 
   readonly errorsTotal = new Counter({
-    name: 'olan_ai_gateway_errors_total',
+    name: 'acoreai_ai_gateway_errors_total',
     help: 'Classified application errors',
     labelNames: ['area', 'kind'] as const,
     registers: [this.registry],
   });
 
   readonly stageDurationSeconds = new Histogram({
-    name: 'olan_ai_gateway_stage_duration_seconds',
+    name: 'acoreai_ai_gateway_stage_duration_seconds',
     help: 'Internal stage duration in seconds',
     labelNames: ['stage'] as const,
     buckets: [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60],
@@ -46,21 +46,21 @@ export class ObservabilityService implements OnModuleInit {
   });
 
   readonly activeStreams = new Gauge({
-    name: 'olan_ai_gateway_active_streams',
+    name: 'acoreai_ai_gateway_active_streams',
     help: 'Active SSE streams',
     labelNames: ['type'] as const,
     registers: [this.registry],
   });
 
   readonly ollamaRequestsTotal = new Counter({
-    name: 'olan_ai_gateway_ollama_requests_total',
+    name: 'acoreai_ai_gateway_ollama_requests_total',
     help: 'Ollama requests',
     labelNames: ['operation', 'model', 'status'] as const,
     registers: [this.registry],
   });
 
   readonly ollamaDurationSeconds = new Histogram({
-    name: 'olan_ai_gateway_ollama_duration_seconds',
+    name: 'acoreai_ai_gateway_ollama_duration_seconds',
     help: 'Ollama gateway request duration in seconds',
     labelNames: ['operation', 'model'] as const,
     buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 120],
@@ -68,7 +68,7 @@ export class ObservabilityService implements OnModuleInit {
   });
 
   readonly ollamaReportedDurationSeconds = new Histogram({
-    name: 'olan_ai_gateway_ollama_reported_duration_seconds',
+    name: 'acoreai_ai_gateway_ollama_reported_duration_seconds',
     help: 'Ollama total_duration reported by the model in seconds',
     labelNames: ['operation', 'model'] as const,
     buckets: [0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60, 120],
@@ -76,14 +76,14 @@ export class ObservabilityService implements OnModuleInit {
   });
 
   readonly ollamaEvalTokensTotal = new Counter({
-    name: 'olan_ai_gateway_ollama_eval_tokens_total',
+    name: 'acoreai_ai_gateway_ollama_eval_tokens_total',
     help: 'Ollama eval tokens from response metadata',
     labelNames: ['model'] as const,
     registers: [this.registry],
   });
 
   readonly ollamaPromptEvalTokensTotal = new Counter({
-    name: 'olan_ai_gateway_ollama_prompt_eval_tokens_total',
+    name: 'acoreai_ai_gateway_ollama_prompt_eval_tokens_total',
     help: 'Ollama prompt eval tokens from response metadata',
     labelNames: ['model'] as const,
     registers: [this.registry],
@@ -92,7 +92,7 @@ export class ObservabilityService implements OnModuleInit {
   onModuleInit(): void {
     collectDefaultMetrics({
       register: this.registry,
-      prefix: 'olan_ai_gateway_',
+      prefix: 'acoreai_ai_gateway_',
     });
   }
 

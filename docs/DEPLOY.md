@@ -1,4 +1,4 @@
-# OLAN AI Gateway — Despliegue y Actualización en VPS
+# ACOREAI AI Gateway — Despliegue y Actualización en VPS
 
 > Guía para montar desde cero o actualizar un servidor ya existente con Docker.
 
@@ -20,13 +20,13 @@
 
 | Contenedor | Puerto interno | Descripción |
 |---|---|---|
-| `olan-ai-gateway` | `127.0.0.1:4005` | API principal NestJS |
-| `olan-ollama` | `127.0.0.1:11434` | Modelos de lenguaje (no expuesto) |
-| `olan-ai-postgres` | `127.0.0.1:5438` | Base de datos PostgreSQL + pgvector |
-| `olan-ai-mongodb` | `127.0.0.1:27018` | Historial de conversaciones y caché TTS |
-| `olan-tts` | `127.0.0.1:8880` | Servicio de texto a voz (Kokoro) |
-| `olan-stt` | `127.0.0.1:9000` | Servicio de voz a texto (Whisper medium) |
-| `alania-web` | `127.0.0.1:5175` | Web AlanIA, con proxy interno al gateway |
+| `acoreai-gateway` | `127.0.0.1:4005` | API principal NestJS |
+| `acoreai-ollama` | `127.0.0.1:11434` | Modelos de lenguaje (no expuesto) |
+| `acoreai-ai-postgres` | `127.0.0.1:5438` | Base de datos PostgreSQL + pgvector |
+| `acoreai-ai-mongodb` | `127.0.0.1:27018` | Historial de conversaciones y caché TTS |
+| `acoreai-tts` | `127.0.0.1:8880` | Servicio de texto a voz (Kokoro) |
+| `acoreai-stt` | `127.0.0.1:9000` | Servicio de voz a texto (Whisper medium) |
+| `acoreai-web` | `127.0.0.1:5175` | Web ACoreAI, con proxy interno al gateway |
 
 ---
 
@@ -48,15 +48,15 @@ docker compose version
 
 **Opción A — Git (recomendado)**
 ```bash
-git clone https://github.com/tu-org/olan-ai-gateway.git ~/olan-ai-gateway
-cd ~/olan-ai-gateway
+git clone https://github.com/tu-org/acoreai-gateway.git ~/acoreai-gateway
+cd ~/acoreai-gateway
 ```
 
 **Opción B — SCP desde tu máquina local**
 ```bash
-scp -r /ruta/local/olan-ai-gateway usuario@IP_VPS:~/olan-ai-gateway
+scp -r /ruta/local/acoreai-gateway usuario@IP_VPS:~/acoreai-gateway
 ssh usuario@IP_VPS
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 ```
 
 ### 3. Configurar variables de entorno
@@ -76,8 +76,8 @@ LOG_LEVEL=info
 
 AI_GATEWAY_KEY=generar_con_openssl_rand_hex_32
 JWT_SECRET=generar_con_openssl_rand_hex_32
-JWT_ISSUER=olan-ai-gateway
-JWT_AUDIENCE=olan-app
+JWT_ISSUER=acoreai-gateway
+JWT_AUDIENCE=acoreai-app
 JWT_ACCESS_TTL_SECONDS=900
 JWT_REFRESH_TTL_SECONDS=2592000
 
@@ -91,27 +91,27 @@ OLLAMA_MEM_LIMIT=11g
 OLLAMA_MEMSWAP_LIMIT=15g
 
 # ── Base de datos ─────────────────────────────────────────
-POSTGRES_USER=olan_admin_ai
+POSTGRES_USER=acoreai_admin_ai
 POSTGRES_PASSWORD=generar_con_openssl_rand_base64_32
-POSTGRES_DB=olan_ai
-DATABASE_URL=postgresql://olan_admin_ai:misma_password_de_postgres_url_encoded@postgres:5438/olan_ai
+POSTGRES_DB=acoreai_ai
+DATABASE_URL=postgresql://acoreai_admin_ai:misma_password_de_postgres_url_encoded@postgres:5438/acoreai_ai
 
 # ── MongoDB ────────────────────────────────────────────────
-MONGODB_URI=mongodb://mongodb:27017/olan_ai_gateway
-MONGODB_DB=olan_ai_gateway
+MONGODB_URI=mongodb://mongodb:27017/acoreai_ai_gateway
+MONGODB_DB=acoreai_ai_gateway
 MONGODB_MAX_POOL_SIZE=20
 
 # ── TTS ───────────────────────────────────────────────────
 TTS_SERVICE_URL=http://tts-service:8880
 STT_SERVICE_URL=http://stt-service:9000
 
-# ── CORS (dominios del frontend Olan) ─────────────────────
-CORS_ORIGINS=https://app.olan.com,https://www.olan.com
+# ── CORS (dominios del frontend ACoreAI) ─────────────────────
+CORS_ORIGINS=https://app.acoreai.com,https://www.acoreai.com
 
 # ── Admin inicial ─────────────────────────────────────────
 ADMIN_EMAIL=admin@tudominio.com
 ADMIN_PASSWORD=generar_con_openssl_rand_base64_24
-ADMIN_NAME=Administrador OLAN
+ADMIN_NAME=Administrador ACOREAI
 ```
 
 Genera secretos nuevos en el VPS:
@@ -127,7 +127,7 @@ openssl rand -base64 24   # ADMIN_PASSWORD
 ### 4. Levantar todos los contenedores
 
 ```bash
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 # Ejecutar una vez en el VPS; requiere sudo y deja 4 GiB de swap persistente.
 sudo ./scripts/ensure-ollama-swap.sh
 docker compose up -d --build
@@ -145,16 +145,16 @@ Esperar que todos muestren `healthy`:
 
 ```
 NAME                STATUS
-olan-ai-gateway     Up X min (healthy)
-olan-ai-postgres    Up X min (healthy)
-olan-ai-mongodb     Up X min (healthy)
-olan-ollama         Up X min (healthy)
-olan-tts            Up X min (healthy)
-olan-stt            Up X min (healthy)
+acoreai-gateway     Up X min (healthy)
+acoreai-ai-postgres    Up X min (healthy)
+acoreai-ai-mongodb     Up X min (healthy)
+acoreai-ollama         Up X min (healthy)
+acoreai-tts            Up X min (healthy)
+acoreai-stt            Up X min (healthy)
 ```
 
-> `olan-stt` tarda ~3-5 min en el primer arranque descargando el modelo Whisper medium (~1.5 GB).  
-> Los siguientes arranques son inmediatos gracias al volumen `olan_stt_cache`.
+> `acoreai-stt` tarda ~3-5 min en el primer arranque descargando el modelo Whisper medium (~1.5 GB).
+> Los siguientes arranques son inmediatos gracias al volumen `acoreai_stt_cache`.
 
 ### 5. Descargar modelos de Ollama
 
@@ -188,7 +188,7 @@ curl http://127.0.0.1:4005/health/ready
 # Métricas Prometheus
 curl http://127.0.0.1:4005/metrics
 
-# Web AlanIA
+# Web ACoreAI
 curl http://127.0.0.1:5175/
 
 # Chat de prueba
@@ -211,11 +211,11 @@ puerto 4005 directamente a Internet.
 ```bash
 apt install nginx certbot python3-certbot-nginx -y
 
-cp ~/olan-ai-gateway/docker/nginx/olan-ai-gateway.conf \
-   /etc/nginx/sites-available/olan-ai-gateway.conf
+cp ~/acoreai-gateway/docker/nginx/acoreai-gateway.conf \
+   /etc/nginx/sites-available/acoreai-gateway.conf
 
-ln -s /etc/nginx/sites-available/olan-ai-gateway.conf \
-      /etc/nginx/sites-enabled/olan-ai-gateway.conf
+ln -s /etc/nginx/sites-available/acoreai-gateway.conf \
+      /etc/nginx/sites-enabled/acoreai-gateway.conf
 
 # Si está habilitado el sitio por defecto, desactívalo para evitar que capture
 # las peticiones a este dominio.
@@ -235,7 +235,7 @@ certbot renew --dry-run
 Nginx termina TLS y envía todo a `127.0.0.1:4005`, incluyendo las rutas SSE sin
 buffering. Por eso no debes hacer proxy público directo al puerto 4005.
 
-AlanIA Web también corre un Nginx interno. El navegador no recibe `AI_GATEWAY_KEY`; el contenedor `alania-web` la usa solo server-side para proxyear `/api` hacia `olan-ai-gateway`.
+ACoreAI Web también corre un Nginx interno. El navegador no recibe `AI_GATEWAY_KEY`; el contenedor `acoreai-web` la usa solo server-side para proxyear `/api` hacia `acoreai-gateway`.
 
 ---
 
@@ -247,14 +247,14 @@ Este es el flujo para cuando hay código nuevo y el servidor ya está corriendo.
 
 **Si usas Git:**
 ```bash
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 git pull origin main
 ```
 
 **Si subes con SCP desde local:**
 ```bash
 # Ejecutar desde tu máquina local
-scp -r /ruta/local/olan-ai-gateway usuario@IP_VPS:~/olan-ai-gateway
+scp -r /ruta/local/acoreai-gateway usuario@IP_VPS:~/acoreai-gateway
 ```
 
 ### Paso 2 — Reconstruir y reiniciar gateway y servicios de voz
@@ -262,14 +262,14 @@ scp -r /ruta/local/olan-ai-gateway usuario@IP_VPS:~/olan-ai-gateway
 Para cambios en rutas, modelos, TTS o STT reconstruye gateway y servicios de voz:
 
 ```bash
-cd ~/olan-ai-gateway
-docker compose up -d --build olan-ai-gateway stt-service tts-service
+cd ~/acoreai-gateway
+docker compose up -d --build acoreai-gateway stt-service tts-service
 ```
 
 Verificar que levantó bien:
 ```bash
-docker compose ps olan-ai-gateway
-docker compose logs --tail=30 olan-ai-gateway
+docker compose ps acoreai-gateway
+docker compose logs --tail=30 acoreai-gateway
 ```
 
 Validar que STT quedo montado:
@@ -303,7 +303,7 @@ docker compose up -d
 Reinicia los contenedores sin borrar volúmenes (BD, modelos, caché):
 
 ```bash
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 docker compose down
 docker compose up -d
 ```
@@ -316,7 +316,7 @@ docker compose up -d
 > Úsalo solo si quieres empezar desde cero.
 
 ```bash
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 docker compose down -v   # -v elimina los volúmenes
 docker compose up -d --build
 ```
@@ -342,18 +342,18 @@ docker compose ps
 docker compose logs -f
 
 # Solo el gateway
-docker compose logs -f olan-ai-gateway
+docker compose logs -f acoreai-gateway
 
 # Solo el TTS
 docker compose logs -f tts-service
 
 # Últimas 50 líneas del gateway
-docker compose logs --tail=50 olan-ai-gateway
+docker compose logs --tail=50 acoreai-gateway
 ```
 
 ### Reiniciar un servicio sin reconstruir
 ```bash
-docker compose restart olan-ai-gateway
+docker compose restart acoreai-gateway
 docker compose restart tts-service
 docker compose restart mongodb
 ```
@@ -366,17 +366,17 @@ docker stats --no-stream
 ### Entrar a un contenedor
 ```bash
 # Gateway
-docker compose exec olan-ai-gateway sh
+docker compose exec acoreai-gateway sh
 
 # MongoDB (ver colecciones)
 docker compose exec mongodb mongosh
 # Dentro de mongosh:
-#   use olan_ai_gateway
+#   use acoreai_ai_gateway
 #   db.conversations.find().limit(5)
 #   db.conversation_messages.find().limit(5)
 
 # PostgreSQL
-docker compose exec postgres psql -U olan_admin_ai -d olan_ai -p 5438
+docker compose exec postgres psql -U acoreai_admin_ai -d acoreai_ai -p 5438
 ```
 
 ---
@@ -385,13 +385,13 @@ docker compose exec postgres psql -U olan_admin_ai -d olan_ai -p 5438
 
 ```bash
 # 1. Ir al directorio del proyecto en el VPS
-cd ~/olan-ai-gateway
+cd ~/acoreai-gateway
 
 # 2. Bajar cambios (si usas git)
 git pull origin main
 
 # 3. Reconstruir y reiniciar solo el gateway
-docker compose build olan-ai-gateway && docker compose up -d olan-ai-gateway
+docker compose build acoreai-gateway && docker compose up -d acoreai-gateway
 
 # 4. Verificar
 docker compose ps
@@ -405,7 +405,7 @@ curl http://127.0.0.1:4005/health/ready
 ### El gateway no levanta (`unhealthy` o `restarting`)
 
 ```bash
-docker compose logs olan-ai-gateway
+docker compose logs acoreai-gateway
 ```
 
 Causas comunes:
@@ -421,20 +421,20 @@ Causas comunes:
 
 ### TTS muy lento la primera vez
 
-El servicio descarga el modelo Kokoro (~300 MB) en el primer request. Los siguientes son rápidos gracias al caché en MongoDB (TTL 30 min) y disco. El modelo queda guardado en el volumen `olan_tts_cache`.
+El servicio descarga el modelo Kokoro (~300 MB) en el primer request. Los siguientes son rápidos gracias al caché en MongoDB (TTL 30 min) y disco. El modelo queda guardado en el volumen `acoreai_tts_cache`.
 
 ### MongoDB perdió el historial de conversaciones
 
-MongoDB persiste datos en `olan_ai_mongodb_data`. Si el volumen existe, el historial caliente sobrevive reinicios. Si se hizo `docker compose down -v`, los datos calientes se pierden; PostgreSQL conserva la fuente de verdad de conversaciones.
+MongoDB persiste datos en `acoreai_ai_mongodb_data`. Si el volumen existe, el historial caliente sobrevive reinicios. Si se hizo `docker compose down -v`, los datos calientes se pierden; PostgreSQL conserva la fuente de verdad de conversaciones.
 
 ### Error `prisma migrate deploy` al iniciar
 
 ```bash
 # Ver el error exacto
-docker compose logs olan-ai-gateway | grep -i "migrate\|prisma\|error"
+docker compose logs acoreai-gateway | grep -i "migrate\|prisma\|error"
 
 # Correr la migración manualmente
-docker compose exec olan-ai-gateway pnpm exec prisma migrate deploy
+docker compose exec acoreai-gateway pnpm exec prisma migrate deploy
 ```
 
 ### Limpiar imágenes y capas antiguas (liberar espacio)
@@ -455,7 +455,7 @@ Internet (HTTPS :443)
      Nginx
         │  proxy_pass
         ▼
-olan-ai-gateway :4005  (solo 127.0.0.1)
+acoreai-gateway :4005  (solo 127.0.0.1)
    │        │        │         │
    ▼        ▼        ▼         ▼
 MongoDB  Postgres  Ollama   TTS service

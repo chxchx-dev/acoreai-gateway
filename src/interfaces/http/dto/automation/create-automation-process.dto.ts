@@ -4,7 +4,7 @@ export class CreateAutomationProcessDto {
   @IsString()
   @IsNotEmpty()
   @MaxLength(120)
-  @Matches(/^[a-z0-9_]+$/, { message: 'El slug solo puede tener minúsculas, números y guiones bajos (ej. crear_actividad_olan)' })
+  @Matches(/^[a-z0-9_]+$/, { message: 'El slug solo puede tener minúsculas, números y guiones bajos (ej. crear_proceso)' })
   slug!: string;
 
   @IsString()

@@ -22,7 +22,7 @@ export class AutomationProcessesService {
       data: {
         slug: dto.slug,
         name: dto.name,
-        platform: dto.platform ?? 'olan',
+        platform: dto.platform ?? 'acoreai',
         role: dto.role,
         objective: dto.objective,
         requiredInputs: dto.requiredInputs ?? [],

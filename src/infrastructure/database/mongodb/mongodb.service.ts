@@ -88,8 +88,8 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly config: ConfigService) {}
 
   async onModuleInit(): Promise<void> {
-    const uri = this.config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/olan_ai_gateway');
-    const dbName = this.config.get<string>('MONGODB_DB', 'olan_ai_gateway');
+    const uri = this.config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/acoreai_ai_gateway');
+    const dbName = this.config.get<string>('MONGODB_DB', 'acoreai_ai_gateway');
     const options: MongoClientOptions = {
       maxPoolSize: this.config.get<number>('MONGODB_MAX_POOL_SIZE', 20),
       serverSelectionTimeoutMS: 5000,

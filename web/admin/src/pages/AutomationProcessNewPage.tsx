@@ -13,9 +13,9 @@ const schema = z.object({
     .string()
     .min(1, 'El slug es obligatorio')
     .max(120)
-    .regex(/^[a-z0-9_]+$/, 'Solo minúsculas, números y guiones bajos (ej. crear_actividad_olan)'),
+    .regex(/^[a-z0-9_]+$/, 'Solo minúsculas, números y guiones bajos (ej. crear_proceso)'),
   name: z.string().min(1, 'El nombre es obligatorio').max(200),
-  platform: z.string().max(50).default('olan'),
+  platform: z.string().max(50).default('acoreai'),
   role: z.string().max(80).optional(),
   objective: z.string().optional(),
   requiredInputs: z.string().optional(),
@@ -40,7 +40,7 @@ export function AutomationProcessNewPage() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { platform: 'olan' } });
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { platform: 'acoreai' } });
 
   async function onSubmit(values: FormValues) {
     setServerError(null);
@@ -70,18 +70,18 @@ export function AutomationProcessNewPage() {
 
         <Field
           label="Slug *"
-          hint="Identificador único en minúsculas, sin espacios (ej. crear_actividad_olan). No se puede cambiar después."
+          hint="Identificador único en minúsculas, sin espacios (ej. crear_proceso). No se puede cambiar después."
           error={errors.slug?.message}
         >
-          <input {...register('slug')} className="input" placeholder="crear_actividad_olan" />
+          <input {...register('slug')} className="input" placeholder="crear_proceso" />
         </Field>
 
-        <Field label="Nombre *" hint="Nombre legible para mostrar en la lista (ej. 'Crear actividad en OLAN')." error={errors.name?.message}>
+        <Field label="Nombre *" hint="Nombre legible para mostrar en la lista (ej. 'Crear actividad en ACOREAI')." error={errors.name?.message}>
           <input {...register('name')} className="input" />
         </Field>
 
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Plataforma" hint="Dónde se ejecuta este proceso (hoy solo 'olan', pero deja espacio a futuras plataformas)." error={errors.platform?.message}>
+          <Field label="Plataforma" hint="Dónde se ejecuta este proceso." error={errors.platform?.message}>
             <input {...register('platform')} className="input" />
           </Field>
           <Field label="Rol" hint="Quién ejecuta este proceso (ej. 'profesor', 'coordinador')." error={errors.role?.message}>

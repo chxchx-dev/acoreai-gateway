@@ -43,7 +43,7 @@ async def lifespan(app: FastAPI):
     _model = None
 
 
-app = FastAPI(title="OLAN STT Service", lifespan=lifespan)
+app = FastAPI(title="ACOREAI STT Service", lifespan=lifespan)
 
 CT_TO_EXT = {
     "audio/webm": ".webm",

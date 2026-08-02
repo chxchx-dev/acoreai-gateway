@@ -2,9 +2,9 @@ import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { UserRole } from 'src/domain/auth/user-role';
 import { Platform, resolvePlatform } from 'src/domain/platform/platform';
 import {
-  ALANIA_VOICE_PROMPT_BACKEND,
+  ACOREAI_VOICE_PROMPT_BACKEND,
   PRACTICE_PROMPTS_BY_LANG,
-} from 'src/modules/chat/prompts/educational-system.prompt';
+} from 'src/application/services/chat/prompts/educational-system.prompt';
 
 export { Platform } from 'src/domain/platform/platform';
 
@@ -42,7 +42,7 @@ interface ChatPolicy {
 }
 
 const MODEL_POLICY: Record<UserRole, ChatPolicy> = {
-  // Trusted OLAN apps — sin restricción de planes (deshabilitado temporalmente)
+  // Clientes de confianza de ACoreAI — sin restricción de planes.
   [UserRole.APP]: {
     allowedModels: ['*'],
     maxPredict: 900,
@@ -60,7 +60,7 @@ const MODEL_POLICY: Record<UserRole, ChatPolicy> = {
     keepAlive: '10m',
   },
   [UserRole.ACADEMIC]: {
-    allowedModels: ['llama3.2:3b', 'qwen3:4b', 'qwen3', 'alania'],
+    allowedModels: ['llama3.2:3b', 'qwen3:4b', 'qwen3', 'acoreai'],
     maxPredict: 700,
     maxContext: 4096,
     maxBatch: 256,
@@ -68,7 +68,7 @@ const MODEL_POLICY: Record<UserRole, ChatPolicy> = {
     keepAlive: '1h',
   },
   [UserRole.PLUS]: {
-    allowedModels: ['llama3.2:3b', 'qwen3:4b', 'qwen3', 'alania'],
+    allowedModels: ['llama3.2:3b', 'qwen3:4b', 'qwen3', 'acoreai'],
     maxPredict: 900,
     maxContext: 4096,
     maxBatch: 256,
@@ -86,17 +86,11 @@ const MODEL_POLICY: Record<UserRole, ChatPolicy> = {
 };
 
 const SOURCE_ROLE_POLICY: Record<string, UserRole> = {
-  // Plataforma OLAN
-  'olan-app':     UserRole.APP,
-  'olan-web':     UserRole.APP,
-  'olan-mobile':  UserRole.APP,
-  'olan-voice':   UserRole.APP,
-  'olan-system':  UserRole.APP,
-  // Plataforma Alania
-  'alania-web':   UserRole.APP,
-  'alania-app':   UserRole.APP,
-  'alania-voice': UserRole.APP,
-  'alania-system':UserRole.APP,
+  'acoreai-web':   UserRole.APP,
+  'acoreai-app':   UserRole.APP,
+  'acoreai-mobile': UserRole.APP,
+  'acoreai-voice': UserRole.APP,
+  'acoreai-system':UserRole.APP,
 };
 
 export interface ChatPolicyContext {
@@ -134,7 +128,7 @@ export function applyChatPolicy(
   // Idiomas (retomar una práctica por voz desde el historial) manda
   // mode:'voice' + practiceLanguage/practiceLevel juntos. Si se chequeara
   // 'voice' primero, siempre ganaría el prompt genérico en español
-  // (ALANIA_VOICE_PROMPT_BACKEND) e ignoraría el idioma que se practica —
+  // (ACOREAI_VOICE_PROMPT_BACKEND) e ignoraría el idioma que se practica —
   // exactamente el bug reportado ("al hablar, toma el prompt en español").
   if (dto.mode === 'practice' || dto.practiceLanguage) {
     const level = dto.practiceLevel ?? 'Principiante';
@@ -142,7 +136,7 @@ export function applyChatPolicy(
     const prompts = PRACTICE_PROMPTS_BY_LANG[lang] ?? PRACTICE_PROMPTS_BY_LANG.en;
     resolvedSystem = prompts[level] ?? prompts['Principiante'];
   } else if (dto.mode === 'voice') {
-    resolvedSystem = ALANIA_VOICE_PROMPT_BACKEND;
+    resolvedSystem = ACOREAI_VOICE_PROMPT_BACKEND;
   }
 
   return {
@@ -164,7 +158,7 @@ function resolvePolicyRole(context: ChatPolicyContext): UserRole {
   if (source && SOURCE_ROLE_POLICY[source]) {
     return SOURCE_ROLE_POLICY[source];
   }
-  if (source?.startsWith('alania-practice-') || source?.startsWith('olan-practice-')) {
+  if (source?.startsWith('acoreai-practice-')) {
     return UserRole.APP;
   }
 

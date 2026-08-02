@@ -18,7 +18,7 @@ export class OllamaService {
   private static readonly modelFallbacks: Record<string, string[]> = {
     fast:    ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.2:3b', 'llama3.2', 'llama3.2:latest', 'llama3.1:8b'],
     ligero:  ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.2:3b', 'llama3.2', 'llama3.2:latest', 'llama3.1:8b'],
-    alania:  ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.2:3b', 'llama3.2:latest', 'llama3.1:8b'],
+    acoreai:  ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.2:3b', 'llama3.2:latest', 'llama3.1:8b'],
     deep:    ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.1:8b', 'llama3.1', 'llama3.1:latest', 'llama3:8b', 'llama3.2:3b'],
     expert:  ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.1:8b', 'llama3.1', 'llama3.1:latest', 'llama3:8b', 'llama3.2:3b'],
     experto: ['qwen3:4b', 'qwen3', 'qwen3:latest', 'llama3.1:8b', 'llama3.1', 'llama3.1:latest', 'llama3:8b', 'llama3.2:3b'],

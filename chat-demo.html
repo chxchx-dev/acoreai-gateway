@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OLAN AI Gateway — Demo</title>
+<title>ACOREAI AI Gateway — Demo</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -763,7 +763,7 @@
 
 <header>
   <div class="dot" id="statusDot"></div>
-  <h1>OLAN AI Gateway</h1>
+  <h1>ACOREAI AI Gateway</h1>
   <span class="status-txt" id="statusText">Verificando...</span>
   <div class="mode-tabs">
     <button class="mode-tab active" id="tabChat" onclick="switchMode('chat')">
@@ -799,7 +799,7 @@
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
         </svg>
-        <h2>OLAN AI Demo</h2>
+        <h2>ACOREAI AI Demo</h2>
         <p>Escribe una pregunta o selecciona una conversación del historial.</p>
       </div>
     </div>
@@ -961,7 +961,7 @@
 
     <div class="field">
       <label>Source (para logs)</label>
-      <input type="text" id="source" value="olan-demo" />
+      <input type="text" id="source" value="acoreai-demo" />
     </div>
 
     <button class="btn-secondary" onclick="checkHealth()">↺ Verificar conexión</button>
@@ -1340,7 +1340,7 @@
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          <h2>OLAN AI Demo</h2>
+          <h2>ACOREAI AI Demo</h2>
           <p>Escribe una pregunta o selecciona una conversación del historial.</p>
         </div>`;
     }
@@ -1464,7 +1464,7 @@
     const model     = document.getElementById('model').value.trim();
     const useRag    = document.getElementById('useRag').checked;
     const useStream = document.getElementById('useStream').checked;
-    const source    = document.getElementById('source').value.trim() || 'olan-demo';
+    const source    = document.getElementById('source').value.trim() || 'acoreai-demo';
     const systemVal = document.getElementById('systemPrompt').value.trim();
     const temp      = parseFloat(document.getElementById('temperature').value);
 

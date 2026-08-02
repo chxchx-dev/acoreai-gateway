@@ -39,7 +39,7 @@ export function AutomationFieldsTab() {
       title={
         <span className="flex items-center">
           Campos del formulario
-          <InfoHint text="Los campos que hay que llenar en la pantalla de destino (OLAN) para completar el proceso, con su tipo de control (select, texto, fecha...) y si son obligatorios." />
+          <InfoHint text="Los campos que hay que llenar en la pantalla de destino (ACOREAI) para completar el proceso, con su tipo de control (select, texto, fecha...) y si son obligatorios." />
         </span>
       }
     >

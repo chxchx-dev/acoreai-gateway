@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { XpSourceType } from '@prisma/client';
 import { LanguageXpService } from './language-xp.service';
-import { HIDDEN_LEVEL_XP_REWARD } from '../../domain/exam-policy';
+import { HIDDEN_LEVEL_XP_REWARD } from 'src/domain/languages/exam-policy';
 
 @Injectable()
 export class HiddenLevelService {

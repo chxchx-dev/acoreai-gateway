@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { LessonProgressStatus, Prisma, XpSourceType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
-import { EXAM_XP_REWARD, MAX_EXAM_ATTEMPTS, getReviewLessonsForExam } from '../../domain/exam-policy';
+import { EXAM_XP_REWARD, MAX_EXAM_ATTEMPTS, getReviewLessonsForExam } from 'src/domain/languages/exam-policy';
 import { LanguageXpService } from './language-xp.service';
 import { AdventureGenerationService } from './adventure-generation.service';
 

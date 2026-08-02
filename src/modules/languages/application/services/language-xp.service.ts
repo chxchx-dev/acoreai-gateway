@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { XpSourceType } from '@prisma/client';
-import { computeLevelUp } from '../../domain/xp-policy';
-import { getTitleCodesForLevel } from '../../domain/title-policy';
+import { computeLevelUp } from 'src/domain/languages/xp-policy';
+import { getTitleCodesForLevel } from 'src/domain/languages/title-policy';
 
 export interface XpAwardResult {
   xpAwarded: number;

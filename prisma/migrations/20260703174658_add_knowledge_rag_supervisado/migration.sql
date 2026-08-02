@@ -1,5 +1,5 @@
 -- Centro de Conocimiento (RAG supervisado) — tablas aditivas, no toca AiDocument*.
--- Sin tenant_id: alania y olan corren en gateways separados.
+-- Sin tenant_id: acoreai y olan corren en gateways separados.
 
 -- CreateEnum
 CREATE TYPE "KnowledgeSourceStatus" AS ENUM ('draft', 'pending_extraction', 'extracted', 'chunked', 'pending_review', 'needs_changes', 'approved', 'embedding_pending', 'embedding_failed', 'ready_to_publish', 'published', 'rejected', 'archived', 'expired');

@@ -90,7 +90,7 @@ async function bootstrap(): Promise<void> {
   const port = config.get<number>('PORT', 4005);
   await app.listen(port);
 
-  logger.log(`OLAN AI Gateway corriendo en http://localhost:${port}`);
+  logger.log(`ACoreAI Gateway corriendo en http://localhost:${port}`);
   logger.log(`Health live: http://localhost:${port}/health/live`);
   logger.log(`Health ready: http://localhost:${port}/health/ready`);
   logger.log(`Metrics: http://localhost:${port}/metrics`);

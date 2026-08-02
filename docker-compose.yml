@@ -30,15 +30,15 @@ x-gateway-resources: &gateway-resources
   mem_limit: "${GATEWAY_MEM_LIMIT:-512m}"
   mem_reservation: "${GATEWAY_MEM_RESERVATION:-384m}"
 
-x-alania-web-resources: &alania-web-resources
-  cpus: "${ALANIA_WEB_CPUS:-0.50}"
-  mem_limit: "${ALANIA_WEB_MEM_LIMIT:-512m}"
-  mem_reservation: "${ALANIA_WEB_MEM_RESERVATION:-384m}"
+x-acoreai-web-resources: &acoreai-web-resources
+  cpus: "${ACOREAI_WEB_CPUS:-0.50}"
+  mem_limit: "${ACOREAI_WEB_MEM_LIMIT:-512m}"
+  mem_reservation: "${ACOREAI_WEB_MEM_RESERVATION:-384m}"
 
 services:
   postgres:
     image: pgvector/pgvector:0.8.0-pg16
-    container_name: olan-ai-postgres
+    container_name: acoreai-ai-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
@@ -47,7 +47,7 @@ services:
     ports:
       - "127.0.0.1:5438:5438"
     volumes:
-      - olan_ai_postgres_data:/var/lib/postgresql/data
+      - acoreai_ai_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test:
         [
@@ -62,11 +62,11 @@ services:
 
   mongodb:
     image: mongo:7.0
-    container_name: olan-ai-mongodb
+    container_name: acoreai-ai-mongodb
     ports:
       - "127.0.0.1:27018:27017"
     volumes:
-      - olan_ai_mongodb_data:/data/db
+      - acoreai_ai_mongodb_data:/data/db
     healthcheck:
       test:
         ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
@@ -81,12 +81,12 @@ services:
     build:
       context: ./docker/ollama
       dockerfile: Dockerfile
-    container_name: olan-ollama
+    container_name: acoreai-ollama
     expose:
       - "11434"
     volumes:
-      - olan_ollama_data:/models
-      - olan_ollama_home:/home/ollama/.ollama
+      - acoreai_ollama_data:/models
+      - acoreai_ollama_home:/home/ollama/.ollama
     healthcheck:
       test:
         [
@@ -104,16 +104,16 @@ services:
     build:
       context: ./services/tts
       dockerfile: Dockerfile
-    container_name: olan-tts
+    container_name: acoreai-tts
     depends_on:
       mongodb:
         condition: service_healthy
     environment:
-      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/olan_ai_gateway}
-      MONGODB_DB: ${MONGODB_DB:-olan_ai_gateway}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/acoreai_ai_gateway}
+      MONGODB_DB: ${MONGODB_DB:-acoreai_ai_gateway}
     volumes:
-      - olan_tts_cache:/home/app/.cache
-      - olan_tts_audio:/app/tts_cache
+      - acoreai_tts_cache:/home/app/.cache
+      - acoreai_tts_audio:/app/tts_cache
     ports:
       - "127.0.0.1:8880:8880"
     healthcheck:
@@ -133,13 +133,13 @@ services:
     build:
       context: ./services/stt
       dockerfile: Dockerfile
-    container_name: olan-stt
+    container_name: acoreai-stt
     environment:
       WHISPER_MODEL: ${WHISPER_MODEL:-medium}
       WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
       WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
     volumes:
-      - olan_stt_cache:/home/app/.cache/huggingface
+      - acoreai_stt_cache:/home/app/.cache/huggingface
     ports:
       - "127.0.0.1:9000:9000"
     healthcheck:
@@ -155,11 +155,11 @@ services:
     <<: *stt-resources
     restart: unless-stopped
 
-  olan-ai-gateway:
+  acoreai-gateway:
     build:
       context: .
       dockerfile: docker/gateway/Dockerfile
-    container_name: olan-ai-gateway
+    container_name: acoreai-gateway
     env_file:
       - .env
     ports:
@@ -188,8 +188,8 @@ services:
       # Servidor del modelo externo — nunca corre en este compose.
       # Compatibilidad: si vienes de un .env antiguo, usa OLLAMA_BASE_URL como alias.
       MODEL_SERVER_URL: ${MODEL_SERVER_URL:-${OLLAMA_BASE_URL:?MODEL_SERVER_URL or OLLAMA_BASE_URL is required}}
-      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/olan_ai_gateway}
-      MONGODB_DB: ${MONGODB_DB:-olan_ai_gateway}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/acoreai_ai_gateway}
+      MONGODB_DB: ${MONGODB_DB:-acoreai_ai_gateway}
       TTS_SERVICE_URL: ${TTS_SERVICE_URL:-http://tts-service:8880}
       STT_SERVICE_URL: ${STT_SERVICE_URL:-http://stt-service:9000}
     healthcheck:
@@ -205,32 +205,32 @@ services:
     <<: *gateway-resources
     restart: unless-stopped
 
-  # ── Plataforma Alania ────────────────────────────────────────────────────────
-  alania-web:
+  # ── Plataforma ACoreAI ────────────────────────────────────────────────────────
+  acoreai-web:
     build:
-      context: ./web/alania
+      context: ./web/acoreai
       dockerfile: Dockerfile
-    container_name: alania-web
+    container_name: acoreai-web
     env_file:
       - .env
     depends_on:
-      olan-ai-gateway:
+      acoreai-gateway:
         condition: service_healthy
     environment:
-      AI_GATEWAY_INTERNAL_URL: http://olan-ai-gateway:4005
+      AI_GATEWAY_INTERNAL_URL: http://acoreai-gateway:4005
       AI_GATEWAY_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
     ports:
       - "127.0.0.1:5175:8080"
-    <<: *alania-web-resources
+    <<: *acoreai-web-resources
     restart: unless-stopped
 
-  # olan-web se despliega en servidor independiente — no corre en este compose.
+  # acoreai-web se despliega en servidor independiente — no corre en este compose.
 
 volumes:
-  olan_ai_postgres_data:
-  olan_ai_mongodb_data:
-  olan_ollama_data:
-  olan_ollama_home:
-  olan_tts_cache:
-  olan_tts_audio:
-  olan_stt_cache:
+  acoreai_ai_postgres_data:
+  acoreai_ai_mongodb_data:
+  acoreai_ollama_data:
+  acoreai_ollama_home:
+  acoreai_tts_cache:
+  acoreai_tts_audio:
+  acoreai_stt_cache:

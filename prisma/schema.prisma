@@ -525,8 +525,8 @@ model AiGenerationLog {
 }
 
 // ─────────────────────────────────────────────────────────────
-// RAG supervisado — Centro de Conocimiento (docs/rag-supervisado-md)
-// Sin tenant_id: alania y olan corren en gateways/servidores separados.
+// RAG supervisado — Centro de Conocimiento (docs/ARQUITECTURA_HISTORIAL_Y_CONOCIMIENTO.md)
+// Sin tenant_id: la plantilla se despliega como un gateway aislado por instalación.
 // ─────────────────────────────────────────────────────────────
 
 enum KnowledgeSourceStatus {
@@ -770,7 +770,7 @@ model KnowledgeWatcher {
 // Motor de automatización de procesos — definición y gestión, 100% en DB.
 // No ejecuta nada todavía (no hay Playwright/Puppeteer): esto solo modela
 // el "qué" y el "cómo debería hacerse" de un procedimiento (ej. crear una
-// actividad en OLAN), para que un ejecutor futuro lo consuma. Separado
+// actividad en la aplicación), para que un ejecutor futuro lo consuma. Separado
 // deliberadamente del RAG: la fuente de conocimiento responde preguntas,
 // esto describe acciones ejecutables.
 // ══════════════════════════════════════════════════════════════════
@@ -796,7 +796,7 @@ model AutomationProcess {
   id                 String                   @id @default(uuid())
   slug               String                   @unique
   name               String
-  platform           String                   @default("olan")
+  platform           String                   @default("acoreai")
   role               String?
   objective          String?
   status             AutomationProcessStatus  @default(draft)

@@ -14,8 +14,6 @@ import { ApiKeyGuard } from '../guards/api-key.guard';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { AuthService, JwtPayload, KnowledgeRole, UserRole } from 'src/modules/auth/auth.service';
 import { LoginDto } from '../dto/auth/login.dto';
-import { LoginOlanDto } from '../dto/auth/login-olan.dto';
-import { LoginOlanTokenDto } from '../dto/auth/login-olan-token.dto';
 import { CreateUserDto, SetKnowledgeRoleDto } from '../dto/auth/create-user.dto';
 import { RefreshTokenDto } from '../dto/auth/refresh-token.dto';
 import { ChangePasswordDto } from '../dto/auth/change-password.dto';
@@ -36,28 +34,6 @@ export class AuthController {
     return this.authService.login(
       dto.email,
       dto.password,
-      { deviceId: dto.deviceId, deviceName: dto.deviceName, platform: dto.platform },
-      dto.force,
-    );
-  }
-
-  /** POST /api/auth/login-olan — login con identificación de la plataforma OLAN */
-  @Post('login-olan')
-  async loginOlan(@Body() dto: LoginOlanDto) {
-    return this.authService.loginOlan(
-      dto.identificacion,
-      dto.password,
-      { deviceId: dto.deviceId, deviceName: dto.deviceName, platform: dto.platform },
-      dto.force,
-    );
-  }
-
-  /** POST /api/auth/login-olan-token — login desde redirección externa con token de plataforma OLAN */
-  @Post('login-olan-token')
-  async loginOlanToken(@Body() dto: LoginOlanTokenDto) {
-    return this.authService.loginOlanToken(
-      dto.identificacion,
-      dto.olanToken,
       { deviceId: dto.deviceId, deviceName: dto.deviceName, platform: dto.platform },
       dto.force,
     );

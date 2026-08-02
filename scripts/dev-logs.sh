@@ -14,4 +14,4 @@ cd "$PROJECT_DIR"
 exec /usr/local/bin/docker compose \
   -f docker-compose.yml \
   -f docker-compose.dev.yml \
-  logs -f olan-ai-gateway alania-web
+  logs -f acoreai-gateway acoreai-web

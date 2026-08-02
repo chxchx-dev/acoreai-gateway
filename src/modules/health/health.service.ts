@@ -33,7 +33,7 @@ export class HealthService {
   live(): HealthStatus {
     return {
       status: 'ok',
-      service: 'olan-ai-gateway',
+      service: 'acoreai-gateway',
       timestamp: new Date().toISOString(),
     };
   }
@@ -150,7 +150,7 @@ export class HealthService {
 
     return {
       status: hasError ? 'error' : 'ok',
-      service: 'olan-ai-gateway',
+      service: 'acoreai-gateway',
       timestamp: new Date().toISOString(),
       checks: normalized,
     };

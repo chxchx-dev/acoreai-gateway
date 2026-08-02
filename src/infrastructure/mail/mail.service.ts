@@ -7,7 +7,7 @@ import type { Transporter } from 'nodemailer';
 export class MailService implements OnModuleInit {
   private readonly logger = new Logger(MailService.name);
   private transporter?: Transporter;
-  private from = 'AlanIA <no-reply@alania.local>';
+  private from = 'ACoreAI <no-reply@acoreai.local>';
 
   constructor(private readonly config: ConfigService) {}
 
@@ -33,12 +33,12 @@ export class MailService implements OnModuleInit {
   }
 
   async sendPasswordResetCode(to: string, code: string, ttlMinutes: number): Promise<void> {
-    const subject = 'Recupera tu contraseña de AlanIA';
+    const subject = 'Recupera tu contraseña de ACoreAI';
     const text = `Tu código para restablecer la contraseña es: ${code}\n\nEste código vence en ${ttlMinutes} minutos. Si no solicitaste este cambio, ignora este correo.`;
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
         <h2 style="color: #1E7C77;">Recupera tu contraseña</h2>
-        <p>Usa el siguiente código en la app de AlanIA para crear una nueva contraseña:</p>
+        <p>Usa el siguiente código en la app de ACoreAI para crear una nueva contraseña:</p>
         <p style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #1E7C77;">${code}</p>
         <p>Este código vence en ${ttlMinutes} minutos.</p>
         <p style="color: #666;">Si no solicitaste este cambio, puedes ignorar este correo.</p>

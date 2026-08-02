@@ -58,7 +58,7 @@ export async function fetchUrlContent(url: URL): Promise<FetchedUrlContent> {
     const response = await fetch(url.toString(), {
       signal: controller.signal,
       redirect: 'manual', // un redirect podría saltarse el allowlist; se rechaza explícitamente
-      headers: { 'User-Agent': 'OlanKnowledgeWatcher/1.0' },
+      headers: { 'User-Agent': 'ACoreAIKnowledgeWatcher/1.0' },
     });
 
     if (response.status >= 300 && response.status < 400) {

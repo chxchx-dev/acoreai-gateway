@@ -25,8 +25,8 @@ CACHE_DIR   = os.getenv("TTS_CACHE_DIR", "/app/tts_cache")
 CACHE_TTL   = 1800
 PIPER_BIN   = "/opt/piper/piper"
 ESPEAK_DATA = "/opt/piper/espeak-ng-data"
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/olan_ai_gateway")
-MONGODB_DB  = os.getenv("MONGODB_DB", "olan_ai_gateway")
+MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://mongodb:27017/acoreai_ai_gateway")
+MONGODB_DB  = os.getenv("MONGODB_DB", "acoreai_ai_gateway")
 HF_BASE     = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0"
 
 os.makedirs(MODELS_DIR, exist_ok=True)

@@ -61,7 +61,7 @@ export function AutomationLogsTab() {
       title={
         <span className="flex items-center">
           Logs de ejecución
-          <InfoHint text="Historial de intentos de ejecutar este proceso. Hoy no hay un ejecutor real (bot) que entre a OLAN, así que estos registros se crean a mano mientras se hacen pruebas — cuando exista el ejecutor, los creará automáticamente." />
+          <InfoHint text="Historial de intentos de ejecutar este proceso. Hoy no hay un ejecutor real (bot) que entre a ACOREAI, así que estos registros se crean a mano mientras se hacen pruebas — cuando exista el ejecutor, los creará automáticamente." />
         </span>
       }
     >

@@ -1,4 +1,4 @@
-# Estructura de bases de datos - Olan AI Gateway
+# Estructura de bases de datos - ACoreAI AI Gateway
 
 Estado despues del cambio: los logs de chat ya no se escriben en PostgreSQL. A partir de este punto se guardan en MongoDB, en la coleccion `chat_logs`.
 
@@ -195,7 +195,7 @@ Campos principales:
 Uso:
 
 - Personalizacion de experiencia IA.
-- Onboarding de AlanIA / perfiles educativos.
+- Onboarding de ACoreAI / perfiles educativos.
 
 ### Nota sobre `AiChatLog`
 
@@ -217,7 +217,7 @@ Config:
 
 - `MONGODB_URI`
 - `MONGODB_DB`
-- Default DB: `olan_ai_gateway`
+- Default DB: `acoreai_ai_gateway`
 
 ### Colecciones actuales
 

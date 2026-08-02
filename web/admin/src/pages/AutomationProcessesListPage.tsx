@@ -18,7 +18,7 @@ export function AutomationProcessesListPage() {
         <div>
           <h1 className="flex items-center text-xl font-bold text-slate-800">
             Automatización de procesos
-            <InfoHint text="Aquí defines PROCEDIMIENTOS EJECUTABLES (ej. 'crear una actividad en OLAN'), distinto de la Fuente de Conocimiento que solo responde preguntas. Por ahora esto es solo definición y gestión — todavía no hay un ejecutor real que entre a OLAN." />
+            <InfoHint text="Aquí defines PROCEDIMIENTOS EJECUTABLES (ej. 'crear una actividad en ACOREAI'), distinto de la Fuente de Conocimiento que solo responde preguntas. Por ahora esto es solo definición y gestión — todavía no hay un ejecutor real que entre a ACOREAI." />
           </h1>
           <p className="text-sm text-slate-500">Define pasos, campos, reglas y plantillas de un procedimiento antes de automatizarlo.</p>
         </div>

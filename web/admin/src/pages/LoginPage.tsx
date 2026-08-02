@@ -48,7 +48,7 @@ export function LoginPage() {
           </div>
           <div>
             <h1 className="text-base font-bold leading-tight text-slate-800">Centro de Conocimiento</h1>
-            <p className="text-xs text-slate-400">Panel administrativo de Olan AI Gateway</p>
+            <p className="text-xs text-slate-400">Panel administrativo de ACoreAI AI Gateway</p>
           </div>
         </div>
 

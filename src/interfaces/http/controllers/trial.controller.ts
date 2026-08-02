@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
-import { ChatService } from 'src/modules/chat/chat.service';
+import { ChatService } from 'src/application/services/chat/chat.service';
 import { TrialLimitGuard, TrialRequest } from '../guards/trial-limit.guard';
 import { TrialChatRequestDto } from '../dto/trial/trial-chat-request.dto';
 import { ChatResponseDto } from '../dto/chat/chat-response.dto';
@@ -22,7 +22,7 @@ export class TrialController {
     private readonly chatService: ChatService,
     private readonly config: ConfigService,
   ) {
-    this.defaultModel = this.config.get<string>('TRIAL_DEFAULT_MODEL', 'alania');
+    this.defaultModel = this.config.get<string>('TRIAL_DEFAULT_MODEL', 'acoreai');
   }
 
   @Post('chat')

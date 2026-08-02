@@ -1,7 +1,7 @@
 export function buildRagSystemPrompt(contextBlocks: string[]): string {
   const context = contextBlocks.length > 0 ? contextBlocks.join('\n\n---\n\n') : '(sin contexto)';
 
-  return `Eres un asistente académico de Olan.
+  return `Eres un asistente académico de ACoreAI.
 
 Responde únicamente usando el CONTEXTO APROBADO.
 

@@ -61,7 +61,7 @@ export function AutomationProcessDetailLayout() {
         </NavLink>
         <NavLink to="logs" className={({ isActive }) => tabClass(isActive)}>
           Logs
-          <InfoHint text="Registro de ejecuciones. Hoy se llena manualmente porque todavía no existe un ejecutor real (bot) que entre a OLAN — queda listo para cuando exista." />
+          <InfoHint text="Registro de ejecuciones. Hoy se llena manualmente porque todavía no existe un ejecutor real (bot) que entre a ACOREAI — queda listo para cuando exista." />
         </NavLink>
       </div>
 

@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
+import { RagChunk } from 'src/domain/rag/rag-chunk';
 
 export interface RagDocument {
   id: string;
@@ -11,15 +12,8 @@ export interface RagDocument {
   createdAt: string;
 }
 
-export interface RagChunkRecord {
-  id: string;
-  documentId: string;
-  docTitle: string;
-  docSource?: string;
-  chunkIndex: number;
-  content: string;
-  score?: number;
-}
+/** Alias local: la forma canónica vive en src/domain/rag/rag-chunk.ts. */
+export type RagChunkRecord = RagChunk;
 
 export interface RagDocumentWithChunks extends RagDocument {
   chunks: Omit<RagChunkRecord, 'docTitle' | 'score'>[];

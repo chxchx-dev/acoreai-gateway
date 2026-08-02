@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { RagChunkRecord, RagStoreService } from 'src/modules/rag/rag-store.service';
+import { RagStoreService } from 'src/modules/rag/rag-store.service';
 import { VectorStorePort } from 'src/application/ports/vector-store.port';
+import { RagChunk } from 'src/domain/rag/rag-chunk';
 
 @Injectable()
 export class PgvectorAdapter implements VectorStorePort {
@@ -11,7 +12,7 @@ export class PgvectorAdapter implements VectorStorePort {
     model: string;
     limit: number;
     minScore: number;
-  }): Promise<RagChunkRecord[]> {
+  }): Promise<RagChunk[]> {
     return this.ragStore.searchSimilarChunks(input);
   }
 }

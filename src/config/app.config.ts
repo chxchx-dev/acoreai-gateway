@@ -30,8 +30,8 @@ export const ragConfig = registerAs('rag', () => ({
 }));
 
 export const mongodbConfig = registerAs('mongodb', () => ({
-  uri: process.env['MONGODB_URI'] ?? 'mongodb://localhost:27017/olan_ai_gateway',
-  db: process.env['MONGODB_DB'] ?? 'olan_ai_gateway',
+  uri: process.env['MONGODB_URI'] ?? 'mongodb://localhost:27017/acoreai_ai_gateway',
+  db: process.env['MONGODB_DB'] ?? 'acoreai_ai_gateway',
   maxPoolSize: parseInt(process.env['MONGODB_MAX_POOL_SIZE'] ?? '20', 10),
   conversationTtlSeconds: parseInt(
     process.env['CONVERSATION_TTL_SECONDS'] ?? '2592000',

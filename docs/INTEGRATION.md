@@ -1,4 +1,4 @@
-# OLAN AI Gateway — Guía de Integración
+# ACOREAI AI Gateway — Guía de Integración
 
 Base URL en producción (VPS): `https://ai.tudominio.com`  
 Base URL local (Docker): `http://localhost:4005`  
@@ -14,17 +14,17 @@ Todas las rutas bajo `/api/*` requieren el header:
 x-ai-gateway-key: <AI_GATEWAY_KEY>
 ```
 
-Esta clave **nunca se expone al frontend**. Solo el backend de Olan la conoce.
+Esta clave **nunca se expone al frontend**. Solo el backend de ACoreAI la conoce.
 
 ---
 
-## Variables de entorno requeridas en Olan
+## Variables de entorno requeridas en ACoreAI
 
 ```env
-OLAN_AI_GATEWAY_URL=https://ai.tudominio.com
-OLAN_AI_GATEWAY_KEY=tu_clave_interna
-OLAN_AI_MODEL=llama3.2:3b          # modelo por defecto
-OLAN_AI_USE_RAG=false              # activar RAG si hay documentos cargados
+ACOREAI_AI_GATEWAY_URL=https://ai.tudominio.com
+ACOREAI_AI_GATEWAY_KEY=tu_clave_interna
+ACOREAI_AI_MODEL=llama3.2:3b          # modelo por defecto
+ACOREAI_AI_USE_RAG=false              # activar RAG si hay documentos cargados
 ```
 
 ---
@@ -47,7 +47,7 @@ x-ai-gateway-key: <key>
   "model": "llama3.2:3b",
   "userId": "usuario-123",
   "conversationId": "uuid-opcional",
-  "source": "olan-app",
+  "source": "acoreai-app",
   "useRag": false,
   "useHistory": true,
   "historyLimit": 10
@@ -58,9 +58,9 @@ x-ai-gateway-key: <key>
 |---|---|---|---|
 | `question` | string | ✅ | Pregunta del usuario (máx 1000 chars) |
 | `model` | string | ✅ | Nombre del modelo Ollama |
-| `userId` | string | — | ID del usuario en Olan |
+| `userId` | string | — | ID del usuario en ACoreAI |
 | `conversationId` | string | — | Para continuar una conversación. Si no se envía, se crea una nueva |
-| `source` | string | — | Identificador del origen (`olan-app`, `olan-web`, etc.) |
+| `source` | string | — | Identificador del origen (`acoreai-app`, `acoreai-web`, etc.) |
 | `useRag` | boolean | — | Buscar contexto en documentos indexados (default: `false`) |
 | `useHistory` | boolean | — | Incluir historial reciente (default: `true`) |
 | `historyLimit` | number | — | Mensajes de historial a incluir (0–30, default: 10) |
@@ -127,7 +127,7 @@ event: error
 data: {"message": "El modelo no respondió a tiempo."}
 ```
 
-**Ejemplo JS (frontend Olan)**
+**Ejemplo JS (frontend ACoreAI)**
 
 ```javascript
 const res = await fetch('http://localhost:4005/api/chat/stream', {
@@ -170,13 +170,13 @@ while (true) {
 
 ### Cliente TypeScript incluido
 
-El archivo `src/client/olan-ai-gateway.client.ts` ya tiene el cliente listo para copiar en Olan:
+El archivo `src/client/acoreai-gateway.client.ts` ya tiene el cliente listo para copiar en ACoreAI:
 
 ```typescript
-import { createOlanAiGatewayClient, resolveUserMessage } from './olan-ai-gateway.client';
+import { createACoreAIAiGatewayClient, resolveUserMessage } from './acoreai-gateway.client';
 
-const client = createOlanAiGatewayClient();
-// Lee OLAN_AI_GATEWAY_URL y OLAN_AI_GATEWAY_KEY del entorno
+const client = createACoreAIAiGatewayClient();
+// Lee ACOREAI_AI_GATEWAY_URL y ACOREAI_AI_GATEWAY_KEY del entorno
 
 // Chat normal
 const response = await client.chat({
@@ -240,7 +240,7 @@ x-ai-gateway-key: <key>
 }
 ```
 
-**Ejemplo uso en Olan**
+**Ejemplo uso en ACoreAI**
 
 ```typescript
 const res = await fetch(`${GATEWAY_URL}/api/translate`, {
@@ -454,17 +454,17 @@ GET /health
 ```
 
 ```json
-{ "status": "ok", "service": "olan-ai-gateway", "timestamp": "2026-05-25T14:00:00.000Z" }
+{ "status": "ok", "service": "acoreai-gateway", "timestamp": "2026-05-25T14:00:00.000Z" }
 ```
 
 ---
 
-## Flujo recomendado en Olan
+## Flujo recomendado en ACoreAI
 
 ```
 Usuario escribe mensaje
        ↓
-Olan Backend llama POST /api/chat/stream con { userId, conversationId, question, model }
+ACoreAI Backend llama POST /api/chat/stream con { userId, conversationId, question, model }
        ↓
 Tokens SSE llegan → se muestran en tiempo real en la UI
        ↓

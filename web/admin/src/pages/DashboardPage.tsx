@@ -40,7 +40,7 @@ export function DashboardPage() {
           label="Publicadas"
           value={cards.publishedCount}
           icon={<CheckCircle2 className="h-4 w-4" />}
-          hint="Fuentes que ya pasaron por revisión y publicación, y que el chat de Alania puede usar hoy para responder."
+          hint="Fuentes que ya pasaron por revisión y publicación, y que el chat de ACoreAI puede usar hoy para responder."
         />
         <StatCard
           label="Pendientes de revisión"

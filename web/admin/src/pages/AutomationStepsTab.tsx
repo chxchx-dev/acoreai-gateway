@@ -36,7 +36,7 @@ export function AutomationStepsTab() {
       title={
         <span className="flex items-center">
           Pasos de ejecución
-          <InfoHint text="La secuencia ordenada de acciones que un ejecutor (hoy no existe todavía) debería seguir, ej. 'abrir_olan', 'iniciar_sesion', 'guardar_borrador'. Es la receta paso a paso del procedimiento." />
+          <InfoHint text="La secuencia ordenada de acciones que un ejecutor (hoy no existe todavía) debería seguir, ej. 'abrir_acoreai', 'iniciar_sesion', 'guardar_borrador'. Es la receta paso a paso del procedimiento." />
         </span>
       }
     >
@@ -63,7 +63,7 @@ export function AutomationStepsTab() {
         {canManage && (
           <div className="flex flex-wrap items-end gap-2 border-t border-slate-100 pt-3">
             <label className="text-sm">
-              <span className="mb-1 block text-xs text-slate-500">Clave (ej. abrir_olan)</span>
+              <span className="mb-1 block text-xs text-slate-500">Clave (ej. abrir_acoreai)</span>
               <input value={key} onChange={(e) => setKey(e.target.value)} className="input w-48" />
             </label>
             <label className="flex-1 text-sm">

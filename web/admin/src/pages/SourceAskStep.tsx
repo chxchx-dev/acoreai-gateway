@@ -58,7 +58,7 @@ export function SourceAskStep() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center text-xs text-slate-400">
           Esta prueba usa solo los chunks de esta fuente (con embedding generado), no el conocimiento ya publicado.
-          <InfoHint text="Es distinto del chat real de Alania (/chat/rag), que busca en TODO lo publicado. Aquí solo pruebas si ESTA fuente, sin publicar todavía, ya responde bien por sí sola." />
+          <InfoHint text="Es distinto del chat real de ACoreAI (/chat/rag), que busca en TODO lo publicado. Aquí solo pruebas si ESTA fuente, sin publicar todavía, ya responde bien por sí sola." />
         </p>
         <input
           value={model}
@@ -72,7 +72,7 @@ export function SourceAskStep() {
       <div className="flex h-[28rem] flex-col rounded-xl border border-slate-200 bg-white shadow-card">
         <div className="flex-1 space-y-3 overflow-y-auto p-4">
           {messages.length === 0 && (
-            <p className="text-sm text-slate-400">Escribe una pregunta para probar esta fuente con Alania.</p>
+            <p className="text-sm text-slate-400">Escribe una pregunta para probar esta fuente con ACoreAI.</p>
           )}
 
           {messages.map((m) => (
@@ -171,7 +171,7 @@ export function SourceAskStep() {
             </div>
           ))}
 
-          {askMutation.isPending && <p className="text-xs text-slate-400">Alania está pensando...</p>}
+          {askMutation.isPending && <p className="text-xs text-slate-400">ACoreAI está pensando...</p>}
         </div>
 
         <div className="flex gap-2 border-t border-slate-200 p-3">

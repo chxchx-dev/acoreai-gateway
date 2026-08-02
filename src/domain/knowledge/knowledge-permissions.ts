@@ -1,6 +1,6 @@
 import { KnowledgeRole } from './knowledge-role';
 
-// Matriz de permisos de la Fase 7 (docs/rag-supervisado-md/07_...).
+// Matriz de permisos del Centro de Conocimiento (plan histórico en docs/ai/07_...).
 // "No opcional" en el doc = deshabilitado por default, activable por flag.
 export type KnowledgeAction =
   | 'create_source'

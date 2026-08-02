@@ -1,7 +1,7 @@
 {
-  "name": "olan-ai-gateway",
+  "name": "acoreai-gateway",
   "version": "0.1.0",
-  "description": "Gateway seguro entre Olan y Ollama",
+  "description": "Gateway seguro entre ACoreAI y Ollama",
   "scripts": {
     "start": "NODE_PATH=dist node dist/src/main",
     "ios": "npx react-native run-ios",

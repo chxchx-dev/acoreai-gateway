@@ -9,8 +9,8 @@ import { ConversationsModule } from 'src/modules/conversations/conversations.mod
 import { LogsModule } from 'src/modules/logs/logs.module';
 import { RagModule } from 'src/modules/rag/rag.module';
 import { ChatController } from 'src/interfaces/http/controllers/chat.controller';
-import { ChatService } from './chat.service';
-import { IntentClassifierService } from './intent-classifier.service';
+import { ChatService } from 'src/application/services/chat/chat.service';
+import { IntentClassifierService } from 'src/application/services/chat/intent-classifier.service';
 
 @Module({
   imports: [

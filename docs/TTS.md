@@ -1,4 +1,4 @@
-# OLAN AI Gateway — Integración TTS (Texto a Voz)
+# ACOREAI AI Gateway — Integración TTS (Texto a Voz)
 
 Base URL: `https://ai.tudominio.com` · Auth: `x-ai-gateway-key: <clave>`
 

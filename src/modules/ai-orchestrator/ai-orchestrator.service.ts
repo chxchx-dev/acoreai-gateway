@@ -1,12 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import {
-  OllamaApiChatStreamChunk,
-  OllamaChatParams,
-  OllamaChatResult,
   OllamaHealthResult,
   OllamaAvailableModelsResponse,
 } from 'src/modules/ollama/types/ollama.types';
 import { LLM_PORT, LlmPort } from 'src/application/ports/llm.port';
+import { ChatParams, ChatResult, ChatStreamChunk } from 'src/domain/ai/llm.types';
 import { OllamaService } from 'src/modules/ollama/ollama.service';
 
 @Injectable()
@@ -17,14 +15,14 @@ export class AiOrchestratorService {
     private readonly ollamaService: OllamaService,
   ) {}
 
-  generate(params: OllamaChatParams): Promise<OllamaChatResult> {
+  generate(params: ChatParams): Promise<ChatResult> {
     return this.llm.chat(params);
   }
 
   generateStream(
-    params: OllamaChatParams,
+    params: ChatParams,
     signal?: AbortSignal,
-  ): AsyncGenerator<OllamaApiChatStreamChunk> {
+  ): AsyncGenerator<ChatStreamChunk> {
     return this.llm.chatStream(params, signal);
   }
 

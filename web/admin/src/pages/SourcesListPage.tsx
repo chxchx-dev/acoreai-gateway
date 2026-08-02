@@ -78,7 +78,7 @@ export function SourcesListPage() {
         <div>
           <h1 className="flex items-center text-xl font-bold text-slate-800">
             Fuente de conocimiento
-            <InfoHint text="Documentos, textos y páginas que alimentan las respuestas de Alania (RAG). Cada fuente pasa por: Cargar → Revisar y validar → Publicar → Preguntar (probarla). Solo lo publicado responde en el chat." />
+            <InfoHint text="Documentos, textos y páginas que alimentan las respuestas de ACoreAI (RAG). Cada fuente pasa por: Cargar → Revisar y validar → Publicar → Preguntar (probarla). Solo lo publicado responde en el chat." />
           </h1>
           <p className="text-sm text-slate-500">Documentos, textos y páginas que el chat puede usar una vez publicados.</p>
         </div>

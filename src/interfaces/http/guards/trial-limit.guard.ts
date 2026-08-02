@@ -33,7 +33,7 @@ export class TrialLimitGuard implements CanActivate {
           statusCode: HttpStatus.TOO_MANY_REQUESTS,
           error: 'Trial limit reached',
           message:
-            'Has alcanzado el límite de 3 preguntas de prueba. Regístrate para seguir hablando con Alania sin límites.',
+            'Has alcanzado el límite de 3 preguntas de prueba. Regístrate para seguir hablando con ACoreAI sin límites.',
           limitReached: true,
           questionsUsed: count,
           maxQuestions: TRIAL_LIMIT,

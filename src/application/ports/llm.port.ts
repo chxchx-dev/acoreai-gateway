@@ -1,17 +1,13 @@
-import {
-  OllamaApiChatStreamChunk,
-  OllamaChatParams,
-  OllamaChatResult,
-} from 'src/modules/ollama/types/ollama.types';
+import { ChatParams, ChatResult, ChatStreamChunk } from 'src/domain/ai/llm.types';
 
 export const LLM_PORT = Symbol('LLM_PORT');
 
 export interface LlmPort {
-  chat(params: OllamaChatParams): Promise<OllamaChatResult>;
+  chat(params: ChatParams): Promise<ChatResult>;
   chatStream(
-    params: OllamaChatParams,
+    params: ChatParams,
     signal?: AbortSignal,
-  ): AsyncGenerator<OllamaApiChatStreamChunk>;
+  ): AsyncGenerator<ChatStreamChunk>;
   embed(input: string | string[]): Promise<number[][]>;
   resolveAvailableModelName(modelName: string): Promise<string | null>;
 }

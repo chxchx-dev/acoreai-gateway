@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { ChatService } from 'src/modules/chat/chat.service';
+import { ChatService } from 'src/application/services/chat/chat.service';
 import { ChatRequest } from '../contracts/chat.contract';
 
 @Injectable()
