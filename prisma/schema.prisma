@@ -525,7 +525,7 @@ model AiGenerationLog {
 }
 
 // ─────────────────────────────────────────────────────────────
-// RAG supervisado — Centro de Conocimiento (docs/ARQUITECTURA_HISTORIAL_Y_CONOCIMIENTO.md)
+// RAG supervisado — Centro de Conocimiento (ver README principal)
 // Sin tenant_id: la plantilla se despliega como un gateway aislado por instalación.
 // ─────────────────────────────────────────────────────────────
 

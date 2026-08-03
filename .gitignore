@@ -10,9 +10,6 @@ vite.config.js
 vite.config.d.ts
 .DS_Store
 
-# Docs de contexto para asistentes de IA (no se versionan)
-docs/ai/
-
 # Datos y artefactos locales; cada servidor conserva sus propios respaldos
 backups/
 **/__pycache__/

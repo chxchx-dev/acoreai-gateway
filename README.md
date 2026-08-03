@@ -1,138 +1,183 @@
 # ACoreAI Gateway
 
-Modular AI platform for building enterprise assistants connected to private, controlled knowledge.
+Plataforma modular y reutilizable para crear asistentes empresariales conectados a conocimiento privado, controlado y trazable.
 
-The project is intentionally structured as a template: ACoreAI provides the shared platform capabilities, while future products can add their own prompts, branding, domain modules, and client applications without rewriting the core gateway.
+ACoreAI no es un chatbot genérico ni un sistema de entrenamiento automático. Es una base para productos que necesitan cargar, revisar, versionar, publicar y consultar conocimiento de una organización mediante IA, conservando permisos, vigencia, fuentes y auditoría.
 
-## Product direction
+## Propósito y límites de la plantilla
 
-ACoreAI is a platform for companies whose manuals, policies, procedures, and operational documentation are dispersed and difficult to verify. It enables teams to load, review, version, publish, and query enterprise knowledge through AI assistants with controlled sources.
+El repositorio se distribuye como plantilla. El núcleo se mantiene neutral al sector; cada producto derivado aporta su marca, clientes, prompts, reglas de negocio y módulos de dominio.
 
-The canonical product rule is documented in [`docs/DIRECCION_PRODUCTO.md`](docs/DIRECCION_PRODUCTO.md). Every new module, endpoint, screen, and integration should support this direction or be explicitly justified as a reusable platform extension.
+| Conservar como plataforma | Personalizar por producto | Activar sólo si aplica |
+| --- | --- | --- |
+| Gateway, autenticación, roles, auditoría, health y métricas | nombre, dominio, logotipo, paleta, textos y prompts | TTS, STT y traducción |
+| Chat, conversaciones, streaming, políticas de modelos y observabilidad | áreas de conocimiento, permisos y flujo de aprobación | idiomas, Adventure Mode y perfil educativo |
+| Centro de Conocimiento: fuentes, versiones, revisión, publicación, RAG y citas | módulos de dominio y clientes | trial, watchers, correo y automatizaciones |
+| PostgreSQL, MongoDB, Prisma, Ollama y Docker | límites, modelos y políticas de retención | servicios adicionales de infraestructura |
 
-## What this project is becoming
+Una funcionalidad pertenece al núcleo sólo si conecta un asistente con conocimiento privado, mejora su calidad, vigencia, seguridad o trazabilidad, facilita la supervisión empresarial o se puede reutilizar en varios asistentes. Las demás capacidades deben permanecer aisladas como extensiones opcionales.
 
-ACoreAI is being developed as a reusable enterprise AI platform with four layers:
+## Principios de producto
 
-1. **Gateway:** secure API, model policies, authentication, conversations, streaming, and observability.
-2. **Knowledge platform:** supervised RAG with document versioning, review, publication, embeddings, citations, and audit trails.
-3. **AI services:** chat, perspectives, translation, text-to-speech, speech-to-text, and language-learning workflows.
-4. **Product surfaces:** reusable assistant clients and an administration panel for enterprise knowledge operations.
+1. El conocimiento privado es el centro del producto.
+2. Toda respuesta empresarial basada en conocimiento debe poder justificarse con sus fuentes.
+3. Cargar una fuente no implica publicarla: la revisión humana y la aprobación son pasos explícitos.
+4. La versión vigente, la validez temporal, los permisos y la auditoría son reglas de negocio, no detalles de interfaz.
+5. La plataforma no aprende autónomamente del contenido cargado ni realiza fine-tuning.
+6. La privacidad se protege por entorno, identidad, roles, políticas de acceso y secretos fuera del código.
 
-The platform is not a fine-tuning system and it does not learn autonomously from uploaded documents. Its knowledge workflow is controlled:
-
-```text
-source → extraction → chunking → human review → approval
-       → embeddings → publication → grounded retrieval
-```
-
-## Current capabilities
-
-- NestJS gateway written in strict TypeScript.
-- Ollama integration over HTTP with configurable models.
-- Complete and streaming chat responses through SSE.
-- Conversation history, summaries, titles, and persistence.
-- Role-based model policies for free, academic, plus, app, and admin clients.
-- JWT access/refresh sessions and Argon2 password hashing.
-- PostgreSQL with Prisma and pgvector.
-- MongoDB for hot conversation history and short-lived caches.
-- Supervised RAG with source versions, review states, validity periods, embeddings, search logs, and citations.
-- React/Vite ACoreAI web client.
-- React/Vite knowledge administration panel.
-- Translation, TTS, STT, trial chat, and language-learning modules.
-- Prometheus metrics, JSON logging, request IDs, throttling, and health checks.
-- Docker Compose development and production environments.
-
-## Architecture
+El ciclo controlado de conocimiento es:
 
 ```text
-┌─────────────────────┐       ┌─────────────────────┐
-│ ACoreAI Web         │       │ Knowledge Admin     │
-│ React + Vite        │       │ React + Vite        │
-└──────────┬──────────┘       └──────────┬──────────┘
-           └──────────────┬──────────────┘
-                          ▼
-                 ┌───────────────────┐
-                 │ acoreai-gateway   │
-                 │ NestJS API        │
-                 └─────┬─────┬───────┘
-                       │     │
-             ┌─────────┘     └──────────┐
-             ▼                         ▼
-      PostgreSQL + pgvector       MongoDB
-             │
-             ├──────────────► Ollama
-             ├──────────────► TTS service
-             └──────────────► STT service
+fuente → extracción → versionado → chunking → revisión humana → aprobación
+       → embeddings → publicación → recuperación con citas → respuesta fundamentada
 ```
 
-The code follows a modular Clean Architecture / Ports & Adapters approach:
+## Capacidades actuales
+
+- API NestJS en TypeScript estricto, con respuestas completas y streaming SSE.
+- Integración con Ollama a través de un adapter HTTP y modelos configurables.
+- Autenticación JWT con refresh tokens, Argon2, gestión de dispositivos y roles.
+- Conversaciones persistentes, títulos, resúmenes e historial caliente.
+- Centro de Conocimiento con fuentes, versiones, chunks, revisiones, publicación, vigencia, auditoría, preguntas sin respuesta y watchers de URL.
+- RAG supervisado con PostgreSQL, pgvector, embeddings y citas de fuentes.
+- Cliente React/Vite de referencia y panel administrativo React/Vite.
+- Métricas Prometheus, logs JSON Pino, `x-request-id`, rate limiting y health checks.
+- Servicios opcionales de traducción, texto a voz, voz a texto, trial, idiomas y automatización.
+- Despliegue con Docker Compose y Nginx.
+
+## Arquitectura
 
 ```text
-src/domain/          Business rules and stable domain types
-src/application/     Use cases, ports, and application services
-src/infrastructure/  Prisma, MongoDB, Ollama, pgvector, metrics
-src/interfaces/http/ Controllers, DTOs, guards, filters, interceptors
-src/modules/         NestJS feature modules
-web/acoreai/         Reusable AI product web client
-web/admin/            Knowledge and process administration
-services/             Python TTS and STT services
-prisma/               Schema, migrations, and seeds
+Cliente de producto       Panel de conocimiento
+React / Vite              React / Vite
+         \                   /
+          \                 /
+           └── Gateway NestJS ──┐
+                                ├── PostgreSQL + pgvector (verdad y RAG)
+                                ├── MongoDB (historial caliente y cachés)
+                                ├── Ollama (chat y embeddings)
+                                ├── TTS opcional
+                                └── STT opcional
 ```
 
-## Technology stack
+El backend aplica Arquitectura Hexagonal (Ports & Adapters) dentro de módulos NestJS. Las reglas y los contratos propios no dependen de HTTP, Prisma, MongoDB ni Ollama.
 
-| Layer | Technology |
-|---|---|
+```text
+src/
+├── domain/            Tipos y reglas de negocio puras
+├── application/
+│   ├── ports/         Interfaces y tokens de entrada/salida
+│   ├── services/      Servicios de aplicación compartidos
+│   └── use-cases/     Orquestación real de varios puertos
+├── infrastructure/    Adapters de Prisma, MongoDB, Ollama, métricas y correo
+├── interfaces/http/   Controllers, DTOs, guards, filtros e interceptores
+├── modules/           Composición NestJS por capacidad
+├── config/            Configuración y validación de entorno
+└── client/            Cliente interno del gateway
+
+web/
+├── acoreai/           Cliente de referencia; se reemplaza o personaliza por producto
+└── admin/             Administración del Centro de Conocimiento
+
+services/
+├── tts/               Servicio FastAPI opcional de texto a voz
+└── stt/               Servicio FastAPI opcional de voz a texto
+
+prisma/
+├── schema.prisma      Modelo relacional
+├── migrations/        Historial de migraciones
+└── seeds/             Datos iniciales
+```
+
+### Reglas hexagonales
+
+- Un controller depende de un puerto o de un caso de uso, nunca de infraestructura concreta.
+- Un adapter traduce entre el contrato del dominio y un proveedor concreto. Cambiar Ollama, Prisma o MongoDB no debe cambiar las reglas de negocio.
+- Los puertos de capacidad envuelven integraciones sin estado (`LlmPort`, `TtsPort`, `SttPort`). Los puertos de repositorio ocultan la persistencia de cada agregado.
+- Un caso de uso sólo se crea al coordinar varios puertos o contener lógica de aplicación real; el CRUD simple puede delegar directamente en su puerto.
+- Un módulo nuevo debe aislar su dominio, contratos, adapter, composición de dependencias y pruebas. No se añaden accesos directos a Prisma/Mongo desde otro módulo.
+
+### Flujo de una petición de chat
+
+```text
+cliente → API key interna → JWT / usuario / rol → validación DTO
+        → política de modelo → historial → decisión de RAG
+        → embedding y búsqueda (si aplica) → prompt → Ollama
+        → respuesta o SSE → persistencia, auditoría y métricas
+```
+
+El clasificador RAG usa una política conservadora: ante duda o fallo busca contexto. La recuperación sólo considera chunks aprobados, publicados y vigentes; el producto derivado debe añadir filtros de área, idioma y permisos cuando correspondan.
+
+## Datos y conocimiento
+
+| Almacenamiento | Responsabilidad |
+| --- | --- |
+| PostgreSQL + Prisma | usuarios, sesiones, conversaciones, mensajes, auditoría, fuentes, versiones, revisiones, publicación, automatizaciones y progreso educativo |
+| pgvector | embeddings de chunks y búsqueda semántica |
+| MongoDB | historial caliente, caché de conversaciones, logs temporales y caché de audio |
+| Ollama | generación de texto, clasificación y embeddings; no almacena conocimiento del producto |
+
+La búsqueda semántica calcula similitud coseno y combina similitud, prioridad, frescura y coincidencia de área. Por defecto recupera los mejores resultados y aplica el umbral `RAG_MIN_SCORE`; estos valores se ajustan por producto mediante entorno y se deben evaluar con preguntas reales.
+
+## Stack
+
+| Capa | Tecnología |
+| --- | --- |
 | Backend | NestJS, TypeScript, Express |
-| LLM | Ollama |
-| Relational data | PostgreSQL, Prisma, pgvector |
-| Hot storage/cache | MongoDB |
-| Authentication | JWT, Argon2 |
-| Frontend | React, Vite, TypeScript |
-| Admin UI | React Query, React Hook Form, Zod, TailwindCSS |
-| TTS | Python, FastAPI, edge-tts |
-| STT | Python, FastAPI, faster-whisper |
-| Observability | Pino, Prometheus, prom-client |
-| Deployment | Docker Compose, Nginx |
+| IA | Ollama |
+| Datos | PostgreSQL, Prisma, pgvector, MongoDB |
+| Seguridad | JWT, Argon2, Helmet, throttling |
+| Clientes | React, Vite, TypeScript, TailwindCSS (admin) |
+| Voz | FastAPI, edge-tts, faster-whisper |
+| Observabilidad | Pino, Prometheus, prom-client |
+| Infraestructura | Docker Compose, Nginx |
 
-## Run locally
+## Crear un proyecto derivado
 
-### Requirements
+1. Crea una rama o un repositorio desde esta base; asigna un nombre propio a servicios, imágenes, volúmenes Docker y bases de datos. Nunca reutilices claves ni datos de otra instalación.
+2. Copia [`.env.example`](.env.example) como `.env` y ajusta secretos, bases de datos, URLs, modelos, administrador y `CORS_ORIGINS`. Para Vite usa también los ejemplos de `web/acoreai/` y `web/admin/`.
+3. Define antes de codificar: usuarios, áreas, roles, fuentes permitidas, flujo de aprobación, política de retención, riesgos y métricas de éxito.
+4. Personaliza marca, dominio, interfaz y prompts. Agrega las reglas específicas en `src/modules/<dominio>` sin acoplarlas a la infraestructura.
+5. Declara qué extensiones se usarán. Si no se necesitan, no las enlaces desde los clientes ni las despliegues. Eliminar una extensión existente requiere revisar migraciones, dependencias y pruebas.
+6. Comprueba login, publicación de una fuente y una respuesta RAG con citas antes de construir capacidades adicionales.
+
+## Configuración y ejecución local
+
+### Requisitos
 
 - Node.js 20+
 - pnpm
-- Docker 24+
-- Docker Compose v2
-- Ollama, locally or on a reachable model server
+- Docker 24+ y Docker Compose v2
+- Ollama local o un servidor de modelos accesible
 
-### Install dependencies
+### Preparación
 
 ```bash
+cp .env.example .env
 pnpm install
 cd web/acoreai && npm install
 cd ../admin && npm install
 cd ../..
 ```
 
-The `.env` files are local-only and are ignored by Git. Configure them according to the deployment documentation. Never commit real credentials.
+En Windows, copia los archivos desde el explorador o PowerShell. Nunca confirmes `.env` en Git.
 
-### Development with Docker
+### Desarrollo con Docker
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Development endpoints:
-
-| Service | URL |
-|---|---|
-| ACoreAI Web | http://localhost:5175 |
-| Admin | http://localhost:5180 |
+| Servicio | Dirección local |
+| --- | --- |
+| Cliente de referencia | http://localhost:5175 |
+| Panel administrativo | http://localhost:5180 |
 | Gateway | http://localhost:4005 |
 | Readiness | http://localhost:4005/health/ready |
+| Métricas | http://localhost:4005/metrics |
 
-### Development without the full stack
+### Desarrollo sin Docker completo
 
 ```bash
 pnpm exec prisma generate
@@ -140,74 +185,61 @@ pnpm exec prisma migrate deploy
 pnpm start:dev
 ```
 
-Run the web applications separately when needed:
+Los clientes se ejecutan aparte:
 
 ```bash
 cd web/acoreai && npm run dev
 cd web/admin && npm run dev
 ```
 
-## Main API areas
+### Comandos de verificación y operación
 
-- `POST /api/chat` — complete chat response.
-- `POST /api/chat/stream` — SSE chat stream.
-- `POST /api/chat/perspectives/stream` — multiple perspectives stream.
-- `GET /api/conversations` — conversation history.
-- `POST /api/rag/search` — semantic knowledge search.
-- `POST /api/chat/rag` — grounded RAG chat.
-- Knowledge source, review, publication, audit, and watcher endpoints.
-- `POST /api/translate` — translation.
-- `POST /api/tts` — text to speech.
-- `POST /api/stt` — speech to text.
-- `POST /api/auth/login` — standard authentication.
-- `GET /health/live` and `GET /health/ready` — health checks.
-- `GET /metrics` — Prometheus metrics.
+```bash
+pnpm build
+pnpm test
+docker compose ps
+docker compose logs -f acoreai-gateway
+docker compose restart acoreai-gateway
+```
 
-All protected API routes require the internal `AI_GATEWAY_KEY`. The key must remain server-side and must never be exposed through browser-visible `VITE_*` variables in production.
+El entrypoint de producción aplica `prisma migrate deploy` antes de iniciar el gateway. En producción usa HTTPS y un proxy inverso con soporte SSE; el archivo `docker/nginx/acoreai-gateway.conf` contiene la configuración de referencia.
 
-## Supervised knowledge model
+## API principal
 
-The Knowledge Center is designed for institutional or product-specific information:
+| Área | Endpoints destacados |
+| --- | --- |
+| Chat | `POST /api/chat`, `POST /api/chat/stream`, `POST /api/chat/perspectives/stream` |
+| Conversaciones | `GET /api/conversations`, `GET /api/conversations/:id/messages`, `PATCH /api/conversations/:id/title`, `DELETE /api/conversations/:id` |
+| RAG y conocimiento | `POST /api/rag/search`, `POST /api/chat/rag` y endpoints de fuentes, versiones, revisiones, publicación, auditoría y watchers |
+| Servicios opcionales | `POST /api/translate`, `POST /api/tts`, `GET /api/tts/voices`, `POST /api/stt` |
+| Seguridad | `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout` |
+| Sistema | `GET /health/live`, `GET /health/ready`, `GET /metrics` |
 
-- Sources are extracted, normalized, chunked, reviewed, and versioned.
-- Embeddings are generated through Ollama and stored in pgvector.
-- Retrieval uses semantic similarity plus priority and freshness signals.
-- Only approved, published, and currently valid chunks can answer RAG queries.
-- Search activity, unanswered questions, source citations, and administrative transitions are auditable.
-- URL watchers create new versions for review; they do not publish automatically.
+Las rutas protegidas requieren `AI_GATEWAY_KEY` entre servicios y JWT para operaciones de usuario. La clave del gateway nunca debe exponerse en un bundle de producción ni en una variable `VITE_*` pública.
 
-## Current limitations
+## Seguridad y operación
 
-- There is no fine-tuning pipeline.
-- Tool calling and real external action execution are not implemented.
-- Automation processes are modeled and administered, but an execution engine is still pending.
-- Long-running extraction and embedding jobs need a dedicated queue for production scale.
-- The web build requires dependencies to be installed locally before validation.
-- Evaluation datasets for retrieval quality, groundedness, and hallucination rates are still needed.
+- Genera claves y contraseñas únicas por entorno; rota credenciales, JWT y administrador al desplegar.
+- Define explícitamente `CORS_ORIGINS`; la plantilla permite por defecto sólo `http://localhost:5175` y `http://localhost:5180`.
+- Revisa tamaño, MIME, contenido y almacenamiento de cada archivo antes de publicarlo.
+- Mantén contenido no aprobado, vencido, sustituido o sin permiso fuera de la recuperación normal.
+- Expón PostgreSQL, MongoDB y el gateway sólo en redes necesarias; publica el gateway detrás de HTTPS y Nginx.
+- No ejecutes `docker compose down -v` salvo que se quiera eliminar de manera intencional los volúmenes locales.
+- Conserva métricas, logs y auditoría; son parte del contrato operacional del producto.
 
-## Direction and next milestones
+## Estado y siguientes prioridades
 
-The next stage is to turn this foundation into a productized template:
+La base ya contiene el gateway, RAG supervisado, administración de conocimiento, autenticación, persistencia y adapters de infraestructura. Los siguientes trabajos recomendados son:
 
-1. Keep the gateway brand-neutral and isolate product-specific configuration.
-2. Unify all chat flows behind one orchestration pipeline.
-3. Add automated tests for policies, authentication, RAG, publishing, and language progression.
-4. Add evaluation and monitoring for answer quality and source grounding.
-5. Add queues and retry policies for heavy AI and document-processing tasks.
-6. Add a safe tool/action layer with validation, permissions, dry runs, and audit logs.
-7. Make product branding, prompts, domains, and enabled modules configurable per deployment.
+1. Unificar los pipelines de chat para que historial, RAG, prompt, streaming y persistencia tengan una sola política.
+2. Asegurar filtros de publicación, vigencia, área, idioma y permisos en todas las rutas RAG.
+3. Ampliar pruebas unitarias, integración y e2e para políticas, auth, publicación y calidad de recuperación.
+4. Incorporar colas, reintentos y circuit breakers para extracción, embeddings y dependencias externas.
+5. Medir precisión de recuperación, groundedness y alucinaciones con conjuntos de evaluación reales.
+6. Definir almacenamiento de archivos S3-compatible para producción y una política de retención.
 
-Additional working plans and AI context documents are kept locally in `docs/ai/`, which is intentionally ignored by Git.
+No están implementados todavía: fine-tuning, ejecución real de herramientas/function calling, ejecutor de automatizaciones, aprendizaje autónomo desde conversaciones, memoria semántica avanzada ni una suite completa de evaluación de respuestas.
 
-## Security notes
+## Licencia
 
-- Keep `.env` files out of commits.
-- Rotate gateway, database, JWT, and administrator credentials per deployment.
-- Do not expose `AI_GATEWAY_KEY` to browser bundles.
-- Put production services behind HTTPS and a restricted reverse proxy.
-- Review uploaded files and sensitive data before publishing them to the knowledge base.
-- Do not use `docker compose down -v` unless local database volumes can be discarded.
-
-## License
-
-Internal ACoreAI project. Add a public license before distributing the template externally.
+Este proyecto se publica bajo la [Licencia MIT](LICENSE).

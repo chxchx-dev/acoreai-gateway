@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
       ? env.VITE_AI_GATEWAY_PUBLIC_URL
       : env.VITE_AI_GATEWAY_LOCAL_URL) ||
     env.VITE_AI_GATEWAY_URL ||
-    "http://ai.217-77-0-2.nip.io:4005";
+    "http://localhost:4005";
   const gatewayKey =
     (usePublicGateway
       ? env.VITE_AI_GATEWAY_PUBLIC_KEY

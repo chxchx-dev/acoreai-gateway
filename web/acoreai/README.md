@@ -2,7 +2,7 @@
 
 App web Vite + React + TypeScript para ACoreAI.
 
-Esta interfaz es una superficie reutilizable para asistentes empresariales conectados al conocimiento privado administrado por ACoreAI. Las decisiones de producto y el ciclo de fuentes controladas están definidos en [`../../docs/DIRECCION_PRODUCTO.md`](../../docs/DIRECCION_PRODUCTO.md).
+Esta interfaz es una superficie reutilizable para asistentes empresariales conectados al conocimiento privado administrado por ACoreAI. Las decisiones de producto, el ciclo de fuentes controladas y la arquitectura están definidos en el [README principal](../../README.md).
 
 ## Requisitos
 

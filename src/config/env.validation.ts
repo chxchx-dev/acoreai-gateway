@@ -1,7 +1,7 @@
 import * as Joi from 'joi';
 
 const defaultCorsOrigins =
-  'http://localhost:3000,http://localhost:5173,http://127.0.0.1:5500,http://localhost:5500,null';
+  'http://localhost:5175,http://localhost:5180';
 
 export const envValidationSchema = Joi.object({
   PORT: Joi.number().default(4005),

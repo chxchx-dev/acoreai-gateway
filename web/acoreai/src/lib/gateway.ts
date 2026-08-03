@@ -44,7 +44,7 @@ function resolveDevGatewayUrl() {
   return (
     cleanUrl(import.meta.env.VITE_AI_GATEWAY_LOCAL_URL) ||
     cleanUrl(import.meta.env.VITE_AI_GATEWAY_URL) ||
-    'http://ai.217-77-0-2.nip.io:4005'
+    'http://localhost:4005'
   );
 }
 

@@ -1,10 +1,10 @@
-# Docker Layout
+# Docker layout
 
-Archivos de infraestructura Docker/Nginx:
+Archivos de infraestructura:
 
-- `gateway/Dockerfile`: imagen de producción del Nest gateway.
-- `gateway/entrypoint.sh`: ejecuta `prisma migrate deploy` y arranca `node dist/main`.
-- `ollama/Dockerfile`: imagen Ollama fijada y preparada para correr sin root.
-- `nginx/acoreai-gateway.conf`: proxy público del VPS, con SSE sin buffering.
+- `gateway/Dockerfile`: imagen de producción del gateway NestJS.
+- `gateway/entrypoint.sh`: ejecuta `prisma migrate deploy` e inicia `node dist/main`.
+- `ollama/Dockerfile`: imagen Ollama preparada para ejecutarse sin root.
+- `nginx/acoreai-gateway.conf`: proxy público de referencia, con SSE sin buffering.
 
-La guía operativa completa vive en `../DEPLOY.md`.
+Los comandos de desarrollo, operación y despliegue se mantienen en el README principal.
