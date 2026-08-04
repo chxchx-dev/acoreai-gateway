@@ -8,7 +8,7 @@ import { Button } from '../components/Button';
 import { Thead, Tbody, Tr, Th, Td } from '../components/Table';
 import { Plus } from 'lucide-react';
 import { automationProcessesApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 
 const FIELD_TYPES = ['select', 'text', 'textarea', 'date', 'time', 'number', 'file'] as const;
 
@@ -16,7 +16,7 @@ export function AutomationFieldsTab() {
   const { process } = useOutletContext<AutomationOutletContext>();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['automation-process', process.id] });
-  const canManage = canAutomation('manage_process');
+  const canManage = canManageAutomation();
 
   const [key, setKey] = useState('');
   const [tipo, setTipo] = useState<(typeof FIELD_TYPES)[number]>('text');

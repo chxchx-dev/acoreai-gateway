@@ -7,7 +7,7 @@ import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { Plus } from 'lucide-react';
 import { automationProcessesApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 import type { AutomationChecklistItem } from '../lib/types';
 
 function ChecklistColumn({
@@ -83,7 +83,7 @@ export function AutomationChecklistTab() {
   const { process } = useOutletContext<AutomationOutletContext>();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['automation-process', process.id] });
-  const canManage = canAutomation('manage_process');
+  const canManage = canManageAutomation();
 
   const addMutation = useMutation({
     mutationFn: ({ momento, label }: { momento: 'antes' | 'despues'; label: string }) =>

@@ -13,20 +13,15 @@ import {
   Brain,
   Check,
   ChevronDown,
-  ChevronRight,
   Copy,
   Languages,
   Layers,
-  Lightbulb,
   Loader2,
-  Menu,
   MessageSquare,
   MessageSquarePlus,
   Mic,
   MicOff,
-  Moon,
   PanelLeft,
-  PanelLeftClose,
   Search,
   Send,
   ArrowLeftRight,
@@ -34,7 +29,6 @@ import {
   Square,
   Settings as SettingsIcon,
   Sparkles,
-  Sun,
   Trash2,
   Volume2,
   VolumeX,
@@ -42,7 +36,6 @@ import {
 } from "lucide-react";
 import { LoginScreen } from "./components/LoginScreen";
 import { Markdown, stripMarkdown } from "./components/Markdown";
-import { MaterialCommunityIcons } from "./components/MaterialCommunityIcons";
 import { Settings } from "./components/Settings";
 import { VoiceConversation } from "./components/VoiceConversation";
 import { LanguagePractice } from "./components/LanguagePractice";
@@ -51,7 +44,6 @@ import {
   clearStoredUser,
   readStoredUser,
   storeUser,
-  PLAN_LABELS,
   type DemoUser,
 } from "./lib/auth";
 import {
@@ -83,13 +75,11 @@ import {
   type Conversation,
   type DailySuggestion,
   type PerspectiveMeta,
-  type PerspectivesResult,
   type RagSource,
   type SavedTranslation,
 } from "./lib/gateway";
 import { safeRandomUUID } from "./lib/uuid";
-import { ACOREAI_MASTER_PROMPT, ENGLISH_LEVELS, type EnglishLevelKey, type EnglishLevelDef, type TopicCategory } from "./lib/prompt";
-const acoreai = undefined;
+import { ENGLISH_LEVELS, type EnglishLevelKey, type EnglishLevelDef, type TopicCategory } from "./lib/prompt";
 const acoreaiHola = undefined;
 const acoreaiIdea = undefined;
 const acoreaiUps = undefined;
@@ -215,17 +205,6 @@ const LANGUAGES: { key: string; label: string; flag: string; voice: string }[] =
     },
   ];
 
-function makeConvoStarter(topic: string, style?: string): string {
-  switch (style) {
-    case 'roleplay':             return `Hagamos un roleplay en inglés sobre ${topic}`;
-    case 'interview':            return `Simula una entrevista en inglés donde hablo de ${topic}`;
-    case 'academic_presentation':return `Voy a presentar en inglés mis ideas sobre ${topic}, corrígeme y mejórame`;
-    case 'qa':                   return `Hazme preguntas en inglés sobre ${topic} para practicar mi nivel`;
-    case 'guided_situations':    return `Guíame en una situación en inglés relacionada con ${topic}`;
-    default:                     return `Hablemos en inglés sobre ${topic} de manera natural`;
-  }
-}
-
 // Maps profile interest strings → relevant ENGLISH_LEVELS topics
 const INTEREST_TOPIC_MAP: Record<string, { levelKey: EnglishLevelKey; topicLabel: string }[]> = {
   'tecnología':      [{ levelKey: 'Explorador', topicLabel: 'Technology' }, { levelKey: 'Explorador', topicLabel: 'Media' }, { levelKey: 'Aprendiz', topicLabel: 'Tech' }],
@@ -273,21 +252,6 @@ function resolveTopics(refs: { levelKey: EnglishLevelKey; topicLabel: string }[]
   }).filter((x): x is { level: EnglishLevelDef; topic: { emoji: string; label: string; starter: string } } => x !== null);
 }
 
-const IDIOMAS_CATEGORIES = [
-  { emoji: '💻', label: 'Tecnología',     starter: 'Hablemos en inglés sobre tecnología e innovación',        levelKey: 'Explorador' as EnglishLevelKey, g1: '#002a1e', g2: '#003d29', border: 'rgba(0,225,171,0.25)' },
-  { emoji: '✈️',  label: 'Viajes',         starter: 'Practiquemos inglés para viajes y turismo internacional',  levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#001a3a', g2: '#00254f', border: 'rgba(76,214,255,0.25)' },
-  { emoji: '💼', label: 'Negocios',       starter: 'Practiquemos inglés profesional para negocios y trabajo',  levelKey: 'Explorador' as EnglishLevelKey, g1: '#1a0a38', g2: '#25105a', border: 'rgba(167,139,250,0.25)' },
-  { emoji: '🔬', label: 'Ciencia',        starter: 'Hablemos en inglés sobre descubrimientos y ciencia',       levelKey: 'Explorador' as EnglishLevelKey, g1: '#00211a', g2: '#002e22', border: 'rgba(0,225,171,0.2)'  },
-  { emoji: '🎬', label: 'Cine & Series',  starter: 'Hablemos en inglés sobre películas y series populares',    levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#2a0808', g2: '#380c0c', border: 'rgba(251,146,60,0.25)' },
-  { emoji: '⚽', label: 'Deportes',       starter: 'Conversemos en inglés sobre deportes y competencias',      levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#1e1000', g2: '#2c1800', border: 'rgba(251,191,36,0.25)' },
-  { emoji: '🎨', label: 'Arte & Cultura', starter: 'Exploremos arte, música y cultura en inglés',             levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#1e0a2e', g2: '#2a1040', border: 'rgba(192,132,252,0.25)' },
-  { emoji: '🌿', label: 'Naturaleza',     starter: 'Discutamos en inglés sobre medio ambiente y naturaleza',   levelKey: 'Explorador' as EnglishLevelKey, g1: '#061808', g2: '#0a2810', border: 'rgba(74,222,128,0.25)' },
-  { emoji: '🏥', label: 'Salud',          starter: 'Practiquemos inglés relacionado con salud y bienestar',    levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#001820', g2: '#002030', border: 'rgba(125,211,252,0.25)' },
-  { emoji: '🎓', label: 'Educación',      starter: 'Hablemos en inglés sobre educación y aprendizaje',         levelKey: 'Explorador' as EnglishLevelKey, g1: '#0a0a20', g2: '#10103a', border: 'rgba(99,102,241,0.25)' },
-  { emoji: '🍕', label: 'Gastronomía',    starter: 'Conversemos en inglés sobre comida y gastronomía mundial', levelKey: 'Aprendiz'   as EnglishLevelKey, g1: '#1e0e00', g2: '#2c1800', border: 'rgba(251,191,36,0.2)'  },
-  { emoji: '🤖', label: 'Inteligencia Artificial', starter: 'Hablemos en inglés sobre IA y el futuro digital',levelKey: 'Explorador' as EnglishLevelKey, g1: '#001828', g2: '#002038', border: 'rgba(56,189,248,0.25)' },
-] as const;
-
 const DISCOVERY_ROUTES = [
   { id: 'ciencia',  emoji: '⚗️', color: '#00e1ab', title: 'Ciencia Viral',   desc: 'Experimentos y descubrimientos que están cambiando el mundo hoy.',          tag: 'NUEVOS',      prompt: 'Cuéntame los descubrimientos científicos más impactantes del momento' },
   { id: 'cosmos',   emoji: '🌌', color: '#a78bfa', title: 'Cosmos Pro',      desc: 'Viaja a las estrellas, conoce planetas y misterios del universo profundo.', tag: 'TENDENCIA',   prompt: 'Explícame los misterios más fascinantes del universo y el cosmos' },
@@ -299,12 +263,6 @@ const FEATURED_SUGGESTION = {
   title: '¿Podremos vivir en Marte?',
   desc: 'Descubre los desafíos tecnológicos y biológicos de colonizar el Planeta Rojo en la próxima década.',
   prompt: '¿Podremos vivir en Marte? Explícame los desafíos tecnológicos, biológicos y de ingeniería para colonizar el Planeta Rojo',
-};
-
-const PERSP_ICONS: Record<number, typeof Search> = {
-  0: Search,
-  1: Zap,
-  2: Lightbulb,
 };
 
 const OPTION_COLORS = ["#00D4AA", "#FF9500", "#6C63FF"];
@@ -565,12 +523,6 @@ export function UserApp() {
   const [practiceAutoTopic, setPracticeAutoTopic] = useState<{ starter: string; levelKey: EnglishLevelKey } | null>(null);
   const [idiomasShowAll, setIdiomasShowAll] = useState(false);
   const [homeSelectedLevelIdx, setHomeSelectedLevelIdx] = useState(0);
-  const [histTab, setHistTab] = useState<'investigacion' | 'idiomas'>(() => {
-    const stored = readStoredUser();
-    if (!stored) return 'investigacion';
-    const p = loadProfile(stored.id);
-    return p?.onboardingCompleted && p.preferredMode === 'languages' ? 'idiomas' : 'investigacion';
-  });
   const [chatMode, setChatMode] = useState<'general' | 'perspectivas' | 'rag'>('general');
   const [savedTranslations, setSavedTranslations] = useState<SavedTranslation[]>([]);
   const [pracicarConversations, setPracicarConversations] = useState<Conversation[]>([]);
@@ -593,7 +545,6 @@ export function UserApp() {
   const sttAbortRef = useRef<AbortController | null>(null);
 
   const [ttsMessageId, setTtsMessageId] = useState<string | null>(null);
-  const [ttsWords, setTtsWords] = useState<string[]>([]);
   const [ttsWordIdx, setTtsWordIdx] = useState(0);
   const [ttsFetching, setTtsFetching] = useState(false);
   const [ttsError, setTtsError] = useState<string | null>(null);
@@ -603,10 +554,6 @@ export function UserApp() {
   const appShellRef    = useRef<HTMLElement | null>(null);
   const chatInputRef   = useRef<HTMLTextAreaElement | null>(null);
   const wpSearchInputRef = useRef<HTMLInputElement | null>(null);
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const carouselDrag = useRef({ active: false, startX: 0, scrollLeft: 0 });
-  const [carouselScrolled, setCarouselScrolled] = useState(false);
-  const [globeSpinning, setGlobeSpinning] = useState(false);
   const [dailySuggestion, setDailySuggestion] = useState<DailySuggestion | null>(null);
   const [suggestionLoading, setSuggestionLoading] = useState(false);
   const [welcomeTab, setWelcomeTab] = useState<'routes' | 'suggestion'>('routes');
@@ -639,10 +586,6 @@ export function UserApp() {
   }, [theme]);
 
   useEffect(() => {
-    setHistTab(tab === 'translate' ? 'idiomas' : 'investigacion');
-  }, [tab]);
-
-  useEffect(() => {
     if (!user || !aiProfile) return;
     const CACHE_KEY = `acoreai-web:daily-suggestion:${user.id}`;
     const today = new Date().toISOString().slice(0, 10);
@@ -652,7 +595,7 @@ export function UserApp() {
         setDailySuggestion({ title: cached.title, desc: cached.desc, prompt: cached.prompt });
         return;
       }
-    } catch { /* ignore */ }
+    } catch { return; }
 
     const ctrl = new AbortController();
     setSuggestionLoading(true);
@@ -663,7 +606,7 @@ export function UserApp() {
         setDailySuggestion(suggestion);
         window.localStorage.setItem(CACHE_KEY, JSON.stringify({ ...suggestion, date: today }));
       })
-      .catch(() => { /* silently fall back to default */ })
+      .catch(() => undefined)
       .finally(() => setSuggestionLoading(false));
     return () => ctrl.abort();
   }, [user?.id, aiProfile?.interestTopics.join(',')]);
@@ -738,8 +681,7 @@ export function UserApp() {
       setSavedTranslations(prev => [entry, ...prev]);
       setTranslSaved(true);
       window.setTimeout(() => setTranslSaved(false), 2000);
-    } catch {
-    }
+    } catch { return; }
   }
 
   async function handleDeleteSavedTranslation(id: string) {
@@ -747,8 +689,7 @@ export function UserApp() {
     setSavedTranslations(prev => prev.filter(t => t.id !== id));
     try {
       await deleteTranslationFromServer(id, user.token);
-    } catch {
-    }
+    } catch { return; }
   }
 
   function loadSavedTranslation(entry: SavedTranslation) {
@@ -828,7 +769,6 @@ export function UserApp() {
     const handler = () => logout();
     window.addEventListener('acoreai:session-expired', handler);
     return () => window.removeEventListener('acoreai:session-expired', handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function newChat() {
@@ -1116,8 +1056,7 @@ export function UserApp() {
     if (translAudioRef.current) {
       try {
         translAudioRef.current.source.stop();
-      } catch {
-      }
+      } catch { void 0; }
       translAudioRef.current.ctx.close();
       translAudioRef.current = null;
     }
@@ -1182,14 +1121,12 @@ export function UserApp() {
     if (audioCtxRef.current) {
       try {
         audioCtxRef.current.source.stop();
-      } catch {
-      }
+      } catch { void 0; }
       audioCtxRef.current.ctx.close();
       audioCtxRef.current = null;
     }
     setTtsMessageId(null);
     setTtsFetching(false);
-    setTtsWords([]);
     setTtsWordIdx(0);
   }
 
@@ -1224,7 +1161,6 @@ export function UserApp() {
       source.start();
 
       audioCtxRef.current = { source, ctx };
-      setTtsWords(words);
       setTtsWordIdx(0);
       setTtsFetching(false);
 
@@ -1247,7 +1183,6 @@ export function UserApp() {
       source.onended = () => {
         cancelAnimationFrame(rafRef.current);
         setTtsMessageId(null);
-        setTtsWords([]);
         setTtsWordIdx(0);
         audioCtxRef.current = null;
         // Modo conversación continua: cuando esté activo, escucha automáticamente la siguiente pregunta
@@ -1427,7 +1362,6 @@ export function UserApp() {
   if (!aiProfile?.onboardingCompleted || editingProfile) {
     return (
       <AiOnboardingWizard
-        userId={user.id}
         userName={user.name}
         onComplete={async (data) => {
           const fn = editingProfile ? updateProfileWithApi : completeOnboardingWithApi;
@@ -1437,10 +1371,8 @@ export function UserApp() {
           if (profile.preferredMode === 'languages') {
             setTab('translate');
             setIdiomasTab('home');
-            setHistTab('idiomas');
           } else {
             setTab('chat');
-            setHistTab('investigacion');
           }
         }}
       />
@@ -1463,8 +1395,6 @@ export function UserApp() {
         onThemeChange={setTheme}
         onNameChange={handleNameChange}
         onLogout={logout}
-        chatMode={chatMode}
-        onChatModeChange={setChatMode}
       />
 
 

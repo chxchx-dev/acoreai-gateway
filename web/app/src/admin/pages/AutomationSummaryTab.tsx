@@ -5,7 +5,7 @@ import { Panel } from '../components/Card';
 import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { automationProcessesApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 
 function PanelTitle({ children, hint }: { children: React.ReactNode; hint: string }) {
   return (
@@ -24,7 +24,7 @@ export function AutomationSummaryTab() {
   const publishMutation = useMutation({ mutationFn: () => automationProcessesApi.publish(process.id), onSuccess: invalidate });
   const archiveMutation = useMutation({ mutationFn: () => automationProcessesApi.archive(process.id), onSuccess: invalidate });
 
-  const canManage = canAutomation('manage_process');
+  const canManage = canManageAutomation();
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">

@@ -83,11 +83,11 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
 }
 
 function parseCells(line: string): string[] {
-  return line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  return line.trim().replace(/^[|]|[|]$/g, '').split('|').map((c) => c.trim());
 }
 
 function isTableSep(line: string): boolean {
-  return /^[\|\s\-:]+$/.test(line.trim()) && line.includes('-');
+  return /^[|\s:-]+$/.test(line.trim()) && line.includes('-');
 }
 
 function parseHeading(line: string): { level: number; text: string } | null {

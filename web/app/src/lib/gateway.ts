@@ -36,34 +36,11 @@ export type StreamResult = {
   status: ChatStatus;
 };
 
-function cleanUrl(value?: string) {
-  return String(value || '').replace(/\/+$/, '');
-}
-
-function resolveDevGatewayUrl() {
-  return (
-    cleanUrl(import.meta.env.VITE_AI_GATEWAY_LOCAL_URL) ||
-    cleanUrl(import.meta.env.VITE_AI_GATEWAY_URL) ||
-    'http://localhost:4005'
-  );
-}
-
 const apiBase = import.meta.env.DEV ? '/ai' : '';
 
 const gatewayJsonHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
 };
-
-function authHeaders(token?: string): Record<string, string> {
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-function jsonHeaders(token?: string): Record<string, string> {
-  return {
-    ...gatewayJsonHeaders,
-    ...authHeaders(token),
-  };
-}
 
 function audioFilenameFromType(type?: string) {
   const normalized = String(type || '').toLowerCase();

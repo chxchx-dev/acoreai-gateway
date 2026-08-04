@@ -53,7 +53,6 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
   const [liveText,     setLiveText]     = useState('');
   const [textInput,    setTextInput]    = useState('');
   const [error,        setError]        = useState('');
-  const [userTurns,    setUserTurns]    = useState(0);
   const [celebration,  setCelebration]  = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
@@ -91,8 +90,8 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
   }, [turns, liveText]);
 
   function stopAudio() {
-    try { srcRef.current?.stop(); }       catch { /* ok */ }
-    try { audioCtxRef.current?.close(); } catch { /* ok */ }
+    try { srcRef.current?.stop(); }       catch { void 0; }
+    try { audioCtxRef.current?.close(); } catch { void 0; }
     srcRef.current = audioCtxRef.current = null;
     playingRef.current = false;
   }
@@ -101,7 +100,7 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
     chatAbortRef.current?.abort();
     setLiveAudioPaused(false);
     stopAudio();
-    try { recorderRef.current?.stop(); } catch { /* ok */ }
+    try { recorderRef.current?.stop(); } catch { void 0; }
     recorderRef.current    = null;
     queueRef.current       = [];
     headRef.current        = 0;
@@ -114,8 +113,8 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
   async function resumeLiveAudio() { await audioCtxRef.current?.resume();  setLiveAudioPaused(false); }
 
   function stopReplay() {
-    try { replaySrcRef.current?.stop(); } catch { /* ok */ }
-    try { replayCtxRef.current?.close(); } catch { /* ok */ }
+    try { replaySrcRef.current?.stop(); } catch { void 0; }
+    try { replayCtxRef.current?.close(); } catch { void 0; }
     replaySrcRef.current = null;
     replayCtxRef.current = null;
     setReplayState(null);
@@ -302,7 +301,6 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
   function sendQuestion(text: string) {
     const q = text.trim();
     if (!q) return;
-    setUserTurns(n => n + 1);
     setTurns(prev => [...prev, { role: 'user', text: q }]);
     runChat(q);
   }
@@ -323,7 +321,6 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
       setLiveText('');
       setError('');
       setTextInput('');
-      setUserTurns(0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -344,9 +341,8 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
           hasCelebration: detectsCelebration(m.content),
         }));
         setTurns(loaded);
-        setUserTurns(loaded.filter(t => t.role === 'user').length);
       })
-      .catch(() => {});
+      .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeConversationId]);
 

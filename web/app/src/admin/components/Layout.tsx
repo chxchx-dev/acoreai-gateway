@@ -14,7 +14,7 @@ import {
   getEffectiveKnowledgeRole,
   getStoredUser,
 } from "../../lib/auth";
-import { can, canAutomation, roleLabel } from "../lib/permissions";
+import { can, canManageAutomation, roleLabel } from "../lib/permissions";
 
 function linkClass(isActive: boolean) {
   return `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition ${isActive
@@ -61,7 +61,7 @@ export function Layout() {
       to: "/automation",
       label: "Automatización",
       icon: Workflow,
-      show: canAutomation("view_process"),
+      show: canManageAutomation(),
     },
     {
       to: "/translations/cache",

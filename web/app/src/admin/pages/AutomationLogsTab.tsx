@@ -8,13 +8,13 @@ import { StatusBadge } from '../components/StatusBadge';
 import { Button } from '../components/Button';
 import { Thead, Tbody, Tr, Th, Td } from '../components/Table';
 import { automationLogsApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 import { ApiError } from '../lib/api';
 
 export function AutomationLogsTab() {
   const { process } = useOutletContext<AutomationOutletContext>();
   const queryClient = useQueryClient();
-  const canManage = canAutomation('manage_logs');
+  const canManage = canManageAutomation();
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ['automation-logs', process.id],

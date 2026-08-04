@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Lock, CheckCircle2, ArrowLeft, Trophy, Loader2,
-  BookOpen, Mic, Headphones, Zap, RotateCcw, Star, ChevronRight, Sparkles,
+  CheckCircle2, ArrowLeft, Trophy, Loader2,
+  Zap, Star, ChevronRight, Sparkles,
   Shield, Crown, Leaf,
 } from 'lucide-react';
 const acoreaiIndicating = undefined;
@@ -156,15 +156,6 @@ function getTierIcon(level: number): { icon: React.ReactNode; label: string; cls
   return           { icon: <Trophy size={22} />,         label: 'Leyenda',   cls: 'tier--leyenda'   };
 }
 
-const LESSON_TYPE_ICON: Record<string, typeof BookOpen> = {
-  LESSON: BookOpen,
-  SPEAKING: Mic,
-  LISTENING: Headphones,
-  PRACTICE: Zap,
-  REVIEW: RotateCcw,
-  HIDDEN: Star,
-};
-
 const LESSON_EMOJI: Record<string, string> = {
   LESSON:    '📖',
   SPEAKING:  '🎤',
@@ -173,15 +164,6 @@ const LESSON_EMOJI: Record<string, string> = {
   REVIEW:    '🔄',
   HIDDEN:    '🌟',
 };
-
-const CEFR_LABELS: Record<string, string> = {
-  A1: 'Principiante',
-  A2: 'Elemental',
-  B1: 'Intermedio',
-  B2: 'Avanzado',
-  C1: 'Proficiency',
-};
-
 
 interface NodeInfo {
   id: string;
@@ -320,8 +302,6 @@ function NodeCircle({
           : isAvailable
             ? 'av2-node--active'
             : 'av2-node--locked';
-
-  const Icon = node.lesson ? (LESSON_TYPE_ICON[node.lesson.type] ?? BookOpen) : BookOpen;
 
   // Emoji for inside the circle
   const nodeEmoji = isCompleted
@@ -537,7 +517,7 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     setView('exam');
   }
 
-  async function handleSubmitExam(examId: string, answers: Record<string, string>, score: number) {
+  async function handleSubmitExam(examId: string, answers: Record<string, string>) {
     const res = (await submitExamAttempt(examId, { answers }, user.token)) as {
       xpResult?: { xpAwarded: number; leveledUp: boolean };
     };
@@ -607,11 +587,9 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     );
   }
 
-  const selectedTitle = profile?.titles?.find(t => t.title.id === profile.selectedTitleId)?.title;
   const completedCount = Object.values(progress).filter(s => s === 'COMPLETED').length;
   const totalCount = phase ? phase.lessons.length : 0;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-  const streak = 0; // placeholder — no streak data in current API
 
   const currentLevel = profile?.currentLevel ?? 1;
   const currentXp    = profile?.currentXp ?? 0;
@@ -897,7 +875,6 @@ function LessonPlayer({
   const [practiceIdx, setPracticeIdx] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [openAnswer, setOpenAnswer] = useState('');
-  const [errors, setErrors] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -932,7 +909,7 @@ function LessonPlayer({
     const isCorrect = isCorrectQuestionAnswer(currentQ, option);
     setFeedback(isCorrect ? 'correct' : 'wrong');
     if (isCorrect) { setCorrect(c => c + 1); setStreak(s => s + 1); }
-    else           { setErrors(e => e + 1);  setStreak(0); }
+    else           { setStreak(0); }
   }
 
   function handleNext() {
@@ -1265,7 +1242,7 @@ function ExamPlayer({
   onBack,
 }: {
   exam: Exam;
-  onSubmit: (examId: string, answers: Record<string, string>, score: number) => void;
+  onSubmit: (examId: string, answers: Record<string, string>) => void;
   onBack: () => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -1307,7 +1284,7 @@ function ExamPlayer({
           <div className="av2-done-sub">
             {passed ? 'Ganaste 20 XP' : score < 80 ? 'Necesitas 80% para pasar' : ''}
           </div>
-          <button className="av2-cta-btn" onClick={() => onSubmit(exam.id, answers, score)}>
+          <button className="av2-cta-btn" onClick={() => onSubmit(exam.id, answers)}>
             {passed ? 'CONTINUAR AVENTURA' : 'VER RESULTADOS'} <ChevronRight size={14} />
           </button>
         </div>
@@ -1371,7 +1348,7 @@ function ExamPlayer({
         {totalQ === 0 && (
           <div className="av2-done">
             <div className="av2-done-sub">Examen sin preguntas disponibles.</div>
-            <button className="av2-cta-btn" onClick={() => onSubmit(exam.id, {}, 100)}>
+            <button className="av2-cta-btn" onClick={() => onSubmit(exam.id, {})}>
               COMPLETAR <CheckCircle2 size={14} />
             </button>
           </div>

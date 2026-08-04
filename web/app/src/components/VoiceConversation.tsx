@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  AudioLines,
   Loader2,
   Mic,
   MicOff,
@@ -73,7 +72,7 @@ export function VoiceConversation({
       .then((msgs) => {
         setTurns(msgs.map((m) => ({ role: m.role, text: m.content })));
       })
-      .catch(() => { });
+      .catch(() => undefined);
   }, [open, conversationId, user.id, user.token]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
@@ -99,12 +98,10 @@ export function VoiceConversation({
   function stopAudio() {
     try {
       srcRef.current?.stop();
-    } catch {
-    }
+    } catch { void 0; }
     try {
       audioCtxRef.current?.close();
-    } catch {
-    }
+    } catch { void 0; }
     srcRef.current = audioCtxRef.current = null;
     playingRef.current = false;
   }
@@ -114,8 +111,7 @@ export function VoiceConversation({
     stopAudio();
     try {
       recorderRef.current?.stop();
-    } catch {
-    }
+    } catch { void 0; }
     recorderRef.current = null;
     queueRef.current = [];
     headRef.current = 0;

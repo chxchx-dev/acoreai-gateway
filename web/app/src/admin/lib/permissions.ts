@@ -56,9 +56,7 @@ export function can(action: KnowledgeAction): boolean {
 
 // Motor de automatización: v1 solo SUPER_ADMIN/TENANT_ADMIN, sin matriz de
 // roles dedicada (espejo simplificado de src/domain/automation/automation-permissions.ts).
-export type AutomationAction = 'manage_process' | 'view_process' | 'manage_logs';
-
-export function canAutomation(_action: AutomationAction): boolean {
+export function canManageAutomation(): boolean {
   const role = getEffectiveKnowledgeRole(getStoredUser());
   if (!role) return false;
   return FULL_ACCESS_ROLES.has(role);

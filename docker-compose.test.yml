@@ -1,0 +1,69 @@
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    command: ["postgres", "-c", "port=5438"]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER is required} -d ${POSTGRES_DB:?POSTGRES_DB is required} -p 5438",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    volumes:
+      - acoreai_e2e_postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:7.0
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    volumes:
+      - acoreai_e2e_mongodb_data:/data/db
+
+  e2e:
+    build:
+      context: .
+      dockerfile: docker/e2e/Dockerfile
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: test
+      E2E_DOCKER: "true"
+      LOG_LEVEL: silent
+      DOTENV_CONFIG_QUIET: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+  qa:
+    build:
+      context: .
+      dockerfile: docker/e2e/Dockerfile
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: test
+      E2E_DOCKER: "true"
+      LOG_LEVEL: silent
+      DOTENV_CONFIG_QUIET: "true"
+    command: ["sh", "-lc", "pnpm run lint && pnpm run build && pnpm run test:all:docker"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  acoreai_e2e_postgres_data:
+  acoreai_e2e_mongodb_data:

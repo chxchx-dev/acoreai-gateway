@@ -4,7 +4,10 @@ const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   rootDir: '.',
-  testMatch: ['<rootDir>/test/smoke/**/*.spec.ts'],
+  testMatch: [
+    '<rootDir>/test/smoke/**/*.spec.ts',
+    '<rootDir>/test/e2e/**/*.e2e.spec.ts',
+  ],
   setupFiles: ['<rootDir>/test/setup-env.ts'],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',

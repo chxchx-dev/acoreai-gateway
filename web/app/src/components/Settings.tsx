@@ -92,8 +92,6 @@ type SettingsProps = {
   onThemeChange: (t: 'light' | 'dark') => void;
   onNameChange: (name: string) => void;
   onLogout: () => void;
-  chatMode?: 'general' | 'perspectivas' | 'rag';
-  onChatModeChange?: (m: 'general' | 'perspectivas' | 'rag') => void;
 };
 
 function userInitials(name: string) {
@@ -113,8 +111,6 @@ export function Settings({
   onThemeChange,
   onNameChange,
   onLogout,
-  chatMode = 'general',
-  onChatModeChange,
 }: SettingsProps) {
   const [view, setView] = useState<View>('home');
   const [draftName, setDraftName] = useState(user.name);

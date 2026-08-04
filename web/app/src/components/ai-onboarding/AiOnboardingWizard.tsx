@@ -86,7 +86,6 @@ export const CORRECTION_LABELS: Record<CorrectionStyle, string> = {
 
 
 interface Props {
-  userId: string;
   userName: string;
   onComplete: (data: CompleteAiOnboardingRequest) => Promise<void>;
 }
@@ -95,7 +94,7 @@ type Draft = Partial<CompleteAiOnboardingRequest>;
 
 const TOTAL_CONFIG_STEPS = 6;
 
-export function AiOnboardingWizard({ userId: _userId, userName, onComplete }: Props) {
+export function AiOnboardingWizard({ userName, onComplete }: Props) {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>({ interestTopics: [] });
   const [saving, setSaving] = useState(false);

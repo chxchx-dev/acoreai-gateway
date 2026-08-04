@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SourceOutletContext } from './SourceDetailLayout';
 import { Panel } from '../components/Card';
 import { StatusBadge } from '../components/StatusBadge';
-import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { humanizeWarning } from '../lib/warnings';
 import { sourcesApi } from '../lib/endpoints';

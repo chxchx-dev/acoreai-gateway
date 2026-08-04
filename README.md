@@ -195,9 +195,51 @@ cd web/app && pnpm dev
 
 ### Comandos de verificación y operación
 
+Desde la raíz del repositorio, estos comandos validan los paquetes disponibles:
+
 ```bash
+pnpm lint
 pnpm build
 pnpm test
+```
+
+`pnpm lint` ejecuta ESLint del frontend y el chequeo TypeScript del backend. `pnpm build` compila el backend y la aplicación web sin depender de red. Ejecuta `pnpm prisma:generate` cuando cambie el schema de Prisma o después de instalar dependencias. `pnpm test` ejecuta las pruebas automatizadas del backend; las pruebas smoke requieren PostgreSQL y MongoDB disponibles en los puertos configurados.
+
+### Demo E2E reproducible
+
+El repositorio incluye un flujo E2E HTTP en `test/e2e/core-flow.e2e.spec.ts`. Levanta el servidor Nest real dentro de un contenedor, aplica validación y guards, inicia sesión, consulta el perfil autenticado, envía un mensaje protegido, comprueba la conversación persistida y cierra la sesión. El LLM se sustituye por una respuesta fija para que la revisión no dependa de Ollama ni de credenciales externas.
+
+Con `.env` configurado y Docker disponible, ejecútalo desde la raíz:
+
+```bash
+pnpm test:e2e
+```
+
+`pnpm test:e2e` construye la imagen de pruebas, instala las dependencias dentro del contenedor, levanta PostgreSQL y MongoDB en la misma red, recrea `acoreai_ai_test`, aplica las migraciones locales y ejecuta únicamente el flujo E2E. Usa volúmenes y bases separadas de las de desarrollo. El stack se detiene automáticamente al finalizar.
+
+Equivalente sin el script de pnpm:
+
+```bash
+docker compose --project-name acoreai-e2e -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from e2e e2e
+```
+
+Para eliminar los contenedores del stack E2E:
+
+```bash
+docker compose --project-name acoreai-e2e -f docker-compose.test.yml down
+```
+
+`pnpm test:e2e:host` conserva una alternativa para ejecutar el mismo escenario desde el host contra los servicios Docker locales.
+
+Para ejecutar toda la verificación en un único contenedor con las dependencias del backend y de `web/app` instaladas:
+
+```bash
+pnpm verify:docker
+```
+
+Este comando ejecuta `pnpm lint`, `pnpm build` y `pnpm test` dentro del servicio `qa`. El stack usa el mismo PostgreSQL y MongoDB aislados del demo; al terminar, el contenedor QA se elimina automáticamente.
+
+```bash
 docker compose ps
 docker compose logs -f acoreai-gateway
 docker compose restart acoreai-gateway

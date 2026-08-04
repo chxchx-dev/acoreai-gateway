@@ -7,13 +7,13 @@ import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { Plus } from 'lucide-react';
 import { automationProcessesApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 
 export function AutomationStepsTab() {
   const { process } = useOutletContext<AutomationOutletContext>();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['automation-process', process.id] });
-  const canManage = canAutomation('manage_process');
+  const canManage = canManageAutomation();
 
   const [key, setKey] = useState('');
   const [label, setLabel] = useState('');

@@ -6,14 +6,14 @@ import { Panel } from '../components/Card';
 import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { automationProcessesApi } from '../lib/endpoints';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 import { ApiError } from '../lib/api';
 
 export function AutomationRulesTab() {
   const { process } = useOutletContext<AutomationOutletContext>();
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['automation-process', process.id] });
-  const canManage = canAutomation('manage_process');
+  const canManage = canManageAutomation();
 
   const [categoria, setCategoria] = useState('');
   const [reglasJson, setReglasJson] = useState('{\n  \n}');

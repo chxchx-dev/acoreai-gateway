@@ -6,7 +6,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { InfoHint } from '../components/InfoHint';
 import { Button } from '../components/Button';
 import { Table, Thead, Tbody, Tr, Th, Td } from '../components/Table';
-import { canAutomation } from '../lib/permissions';
+import { canManageAutomation } from '../lib/permissions';
 
 export function AutomationProcessesListPage() {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ export function AutomationProcessesListPage() {
           </h1>
           <p className="text-sm text-slate-500">Define pasos, campos, reglas y plantillas de un procedimiento antes de automatizarlo.</p>
         </div>
-        {canAutomation('manage_process') && (
+        {canManageAutomation() && (
           <Button icon={<Plus className="h-4 w-4" />} onClick={() => navigate('/automation/new')}>
             Nuevo proceso
           </Button>
@@ -38,7 +38,7 @@ export function AutomationProcessesListPage() {
           <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">
             Un proceso describe una tarea repetible (crear actividad, publicar nota...) con sus pasos, campos y reglas.
           </p>
-          {canAutomation('manage_process') && (
+          {canManageAutomation() && (
             <Button className="mt-4" onClick={() => navigate('/automation/new')}>
               Crear el primer proceso
             </Button>

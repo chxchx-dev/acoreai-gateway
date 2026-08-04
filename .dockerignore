@@ -26,4 +26,9 @@ docs
 deploy/nginx
 services
 web
+!web/
+!web/app/
+!web/app/**
+web/app/node_modules
+web/app/dist
 *.md
