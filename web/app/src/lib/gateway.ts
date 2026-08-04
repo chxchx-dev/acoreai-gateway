@@ -601,7 +601,6 @@ export async function deleteTranslationFromServer(
   if (!res.ok) throw await parseError(res);
 }
 
-// ── Perspectivas ──────────────────────────────────────────────────────────────
 
 export type PerspectiveMeta = {
   index: number;
@@ -729,7 +728,6 @@ export async function synthesizeSpeech(
   return res.arrayBuffer();
 }
 
-// ── AI Profile ────────────────────────────────────────────────────────────────
 
 export interface AiProfileData {
   userId: string;
@@ -773,7 +771,6 @@ export async function updateAiProfile(payload: AiProfilePayload, token: string):
   return res.json() as Promise<AiProfileData>;
 }
 
-// ── Language Adventure API ────────────────────────────────────────────────
 
 const LANG_BASE = `${apiBase}/api/languages`;
 

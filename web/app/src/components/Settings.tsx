@@ -146,7 +146,6 @@ export function Settings({
 
   return (
     <div className={`settings-modal ${open ? 'open' : ''}`}>
-        {/* Header */}
         <div className="settings-header">
           <div className="settings-header-left">
             {view !== 'home' ? (
@@ -169,13 +168,10 @@ export function Settings({
           </button>
         </div>
 
-        {/* Body */}
         <div className="settings-body">
 
-          {/* ── Home ──────────────────────────────────────────────── */}
           {view === 'home' && (
             <>
-              {/* Perfil */}
               <div className="sg-group">
                 <div className="sg-item sg-profile">
                   <div className="sg-avatar">{userInitials(user.name)}</div>
@@ -213,7 +209,6 @@ export function Settings({
                 </div>
               </div>
 
-              {/* Apariencia */}
               <p className="sg-section-label">Apariencia</p>
               <div className="sg-group">
                 <div className="sg-item sg-theme-item">
@@ -238,7 +233,6 @@ export function Settings({
                 </div>
               </div>
 
-              {/* Cuenta */}
               <p className="sg-section-label">Cuenta</p>
               <div className="sg-group">
                 {[
@@ -311,7 +305,6 @@ export function Settings({
             </>
           )}
 
-          {/* ── Planes ────────────────────────────────────────────── */}
           {view === 'plans' && (
             <div className="sp-view">
               <p className="sp-desc">
@@ -359,13 +352,11 @@ export function Settings({
             </div>
           )}
 
-          {/* ── Uso ───────────────────────────────────────────────── */}
           {view === 'usage' && (
             <div className="sp-view">
               <p className="sp-desc">Actividad de tu cuenta en el período actual.</p>
 
               <div className="sg-group">
-                {/* Consultas */}
                 <div className="sg-item sg-stat">
                   <span className="sg-stat-icon" style={{ background: 'rgba(0,212,170,0.12)', color: 'var(--accent)' }}>
                     <MessageSquare size={15} />
@@ -391,7 +382,6 @@ export function Settings({
                   )}
                 </div>
 
-                {/* Historial */}
                 <div className="sg-item sg-stat sg-border-top">
                   <span className="sg-stat-icon" style={{ background: 'rgba(0,150,199,0.12)', color: 'var(--accent-2)' }}>
                     <Shield size={15} />
@@ -432,7 +422,6 @@ export function Settings({
             </div>
           )}
 
-          {/* ── Facturación ───────────────────────────────────────── */}
           {view === 'billing' && (
             <div className="sp-view">
               <p className="sp-desc">Información de tu plan y facturación institucional.</p>
@@ -473,7 +462,6 @@ export function Settings({
             </div>
           )}
 
-          {/* ── Acerca de ─────────────────────────────────────────── */}
           {view === 'about' && (
             <div className="sp-view">
               <div className="about-hero">

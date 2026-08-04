@@ -17,7 +17,6 @@ import {
 } from '../lib/gateway';
 import type { DemoUser } from '../lib/auth';
 
-// ── Types ────────────────────────────────────────────────────────────────────
 
 interface LangProfile {
   id: string;
@@ -137,7 +136,6 @@ function isCorrectQuestionAnswer(
   return normalizePracticeAnswer(resolvedUser) === normalizedExpected;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function xpForLevel(level: number): number {
   if (level < 10) return 100;
@@ -184,7 +182,6 @@ const CEFR_LABELS: Record<string, string> = {
   C1: 'Proficiency',
 };
 
-// ── Node positioning ──────────────────────────────────────────────────────────
 
 interface NodeInfo {
   id: string;
@@ -269,7 +266,6 @@ function computeNodePositions(
   return nodes;
 }
 
-// ── SVG path between nodes ────────────────────────────────────────────────────
 
 type PathState = 'completed' | 'active' | 'locked';
 
@@ -286,9 +282,7 @@ function NodePath({ from, to, state }: {
 
   if (state === 'completed') return (
     <>
-      {/* Glow layer */}
       <path d={d} fill="none" stroke="rgba(0,225,171,0.2)" strokeWidth="6" strokeLinecap="round" />
-      {/* Solid line */}
       <path d={d} fill="none" stroke="rgba(0,225,171,0.85)" strokeWidth="2.5" strokeLinecap="round" />
     </>
   );
@@ -300,7 +294,6 @@ function NodePath({ from, to, state }: {
   );
 }
 
-// ── NodeCircle ────────────────────────────────────────────────────────────────
 
 function NodeCircle({
   node,
@@ -355,7 +348,6 @@ function NodeCircle({
       ? '✨ ¡Sorpresa!'
       : TYPE_LABELS[node.lesson?.type ?? ''] ?? 'Lección';
 
-  // Status tag
   const tagLabel = isExamLocked
     ? '🔒 Bloqueado'
     : isExam
@@ -384,12 +376,10 @@ function NodeCircle({
       style={{ left: `${node.x}%`, top: `${node.y}px` }}
       onClick={() => !isLocked && !isExamLocked && onClick()}
     >
-      {/* Status tag above */}
       <div className="av2-node-label-top">
         {tagLabel && <span className={tagClass}>{tagLabel}</span>}
       </div>
 
-      {/* Circle + pulse together so pulse overlays the circle */}
       <div className="av2-circ-wrap">
         <div className={`av2-node-circle ${stateClass}`}>
           <span className="av2-node-emoji">{nodeEmoji}</span>
@@ -398,13 +388,11 @@ function NodeCircle({
         {isAvailable && !isExam && <div className="av2-node-pulse" />}
       </div>
 
-      {/* Subtitle below */}
       <div className="av2-node-name">{subtitle}</div>
     </div>
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 
 export function AdventureMode({ user }: { user: DemoUser }) {
   const [profile, setProfile] = useState<LangProfile | null>(null);
@@ -582,7 +570,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     setLoading(false);
   }
 
-  // ── Render: loading ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="av2-boot">
@@ -592,7 +579,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     );
   }
 
-  // ── Render: lesson player ───────────────────────────────────────────────────
   if (view === 'lesson' && activeLesson) {
     return (
       <LessonPlayer
@@ -608,7 +594,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     );
   }
 
-  // ── Render: exam player ─────────────────────────────────────────────────────
   if (view === 'exam' && activeExam) {
     return (
       <ExamPlayer
@@ -622,14 +607,12 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     );
   }
 
-  // ── Computed values ─────────────────────────────────────────────────────────
   const selectedTitle = profile?.titles?.find(t => t.title.id === profile.selectedTitleId)?.title;
   const completedCount = Object.values(progress).filter(s => s === 'COMPLETED').length;
   const totalCount = phase ? phase.lessons.length : 0;
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const streak = 0; // placeholder — no streak data in current API
 
-  // ── Shared HUD ──────────────────────────────────────────────────────────────
   const currentLevel = profile?.currentLevel ?? 1;
   const currentXp    = profile?.currentXp ?? 0;
   const xpNeeded     = xpForLevel(currentLevel);
@@ -668,7 +651,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     </header>
   );
 
-  // ── No phase yet ────────────────────────────────────────────────────────────
   if (!phase) {
     return (
       <div className="av2-root">
@@ -700,7 +682,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
     );
   }
 
-  // ── Build node list ─────────────────────────────────────────────────────────
   const nodes = computeNodePositions(
     phase.lessons,
     phase.exams ?? [],
@@ -710,15 +691,12 @@ export function AdventureMode({ user }: { user: DemoUser }) {
 
   const totalHeight = nodes.length > 0 ? nodes[nodes.length - 1].y + 160 : 600;
 
-  // ── Map view ────────────────────────────────────────────────────────────────
   return (
     <div className="av2-root">
       {hud}
 
-      {/* Map canvas */}
       <div className="av2-map-wrap">
         <div className="av2-map-canvas" style={{ height: totalHeight }}>
-          {/* SVG paths (solid for completed, dashed for active/locked) */}
           <svg
             className="av2-svg-paths"
             viewBox={`0 0 100 ${totalHeight}`}
@@ -745,7 +723,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
             })}
           </svg>
 
-          {/* Sector chapter banners */}
           {([
             { label: 'Capítulo 1', icon: '🌱', desc: 'Primeros pasos',     color: '#00e1ab', lessons: [1, 10]  },
             { label: 'Capítulo 2', icon: '⚡', desc: '¡Tomando vuelo!',    color: '#fbbf24', lessons: [11, 20] },
@@ -769,7 +746,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
             );
           })}
 
-          {/* Render all nodes */}
           {nodes.map(node => (
             <NodeCircle
               key={node.id}
@@ -790,7 +766,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
         </div>
       </div>
 
-      {/* Bottom-left progress card */}
       <div className="av2-progress-card">
         <div className="av2-pc-icon">{progressPct < 34 ? '🌱' : progressPct < 67 ? '⭐' : '🏆'}</div>
         <div className="av2-pc-info">
@@ -838,13 +813,11 @@ export function AdventureMode({ user }: { user: DemoUser }) {
         </div>
       )}
 
-      {/* Bottom-right zoom (decorative) */}
       <div className="av2-zoom">
         <button className="av2-zoom-btn">+</button>
         <button className="av2-zoom-btn">−</button>
       </div>
 
-      {/* XP popup */}
       {xpPopup && (
         <div className={`av2-xp-popup${xpPopup.levelUp ? ' av2-xp-popup--levelup' : ''}`}>
           {xpPopup.levelUp
@@ -853,7 +826,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
         </div>
       )}
 
-      {/* Generating overlay */}
       {generating && (
         <div className="av2-generating">
           <div className="av2-generating-ring" />
@@ -864,7 +836,6 @@ export function AdventureMode({ user }: { user: DemoUser }) {
   );
 }
 
-// ── ACoreAI character helper ───────────────────────────────────────────────────
 
 type ACoreAIGesture = 'hola' | 'indicating' | 'idea' | 'studing' | 'heart' | 'nopasa';
 
@@ -901,7 +872,6 @@ function ACoreAIPanel({ gesture }: { gesture: ACoreAIGesture }) {
   );
 }
 
-// ── Vocab flashcard constants ─────────────────────────────────────────────────
 
 const CARD_PALETTE = [
   { bg: 'rgba(0,225,171,0.07)', border: 'rgba(0,225,171,0.25)', glow: 'rgba(0,225,171,0.12)', icon: '🌟' },
@@ -911,7 +881,6 @@ const CARD_PALETTE = [
   { bg: 'rgba(239,68,68,0.07)',  border: 'rgba(239,68,68,0.25)',  glow: 'rgba(239,68,68,0.1)',  icon: '🎯' },
 ] as const;
 
-// ── LessonPlayer ──────────────────────────────────────────────────────────────
 
 function LessonPlayer({
   lesson,
@@ -997,7 +966,6 @@ function LessonPlayer({
 
   return (
     <div className="av2-player">
-      {/* Header */}
       <div className="av2-player-header">
         <button className="av2-back-btn" onClick={onBack} disabled={saving}>
           {saving ? <Loader2 size={14} /> : <ArrowLeft size={14} />} {saving ? 'GUARDANDO' : 'VOLVER'}
@@ -1012,15 +980,11 @@ function LessonPlayer({
         </span>
       </div>
 
-      {/* Main layout: ACoreAI + Content */}
       <div className="av2-lesson-layout">
-        {/* ACoreAI character (left / top) */}
         <ACoreAIPanel key={`${gesture}-${practiceIdx}`} gesture={gesture} />
 
-        {/* Content area */}
         <div className="av2-lesson-content">
 
-          {/* STEP: INTRO */}
           {step === 'intro' && (
             <div className="av2-lc-body">
               <h3 className="av2-lc-title">{lesson.title}</h3>
@@ -1047,7 +1011,6 @@ function LessonPlayer({
             </div>
           )}
 
-          {/* STEP: VOCABULARY — interactive flashcards */}
           {step === 'vocab' && vocab.length > 0 && (() => {
             const card = vocab[vocabIdx];
             const palette = CARD_PALETTE[vocabIdx % CARD_PALETTE.length];
@@ -1071,13 +1034,11 @@ function LessonPlayer({
 
             return (
               <div className="av2-lc-body av2-vc-body">
-                {/* Header */}
                 <div className="av2-vc-header">
                   <span className="av2-vc-label">Vocabulario</span>
                   <span className="av2-vc-counter">{vocabIdx + 1} <span className="av2-vc-counter-sep">/</span> {vocab.length}</span>
                 </div>
 
-                {/* Flip card */}
                 <div
                   className={`av2-vc-flip${vocabFlipped ? ' av2-vc-flip--flipped' : ''}`}
                   style={{ '--vc-bg': palette.bg, '--vc-border': palette.border, '--vc-glow': palette.glow } as React.CSSProperties}
@@ -1086,7 +1047,6 @@ function LessonPlayer({
                   aria-label="Voltear tarjeta"
                 >
                   <div className="av2-vc-inner">
-                    {/* FRONT: English word */}
                     <div className="av2-vc-face av2-vc-front">
                       <div className="av2-vc-card-icon">{palette.icon}</div>
                       <div className="av2-vc-word">{card.term}</div>
@@ -1095,7 +1055,6 @@ function LessonPlayer({
                         toca para ver el significado
                       </div>
                     </div>
-                    {/* BACK: Spanish meaning + example */}
                     <div className="av2-vc-face av2-vc-back">
                       <div className="av2-vc-meaning-label">en español</div>
                       <div className="av2-vc-meaning">{card.meaningEs}</div>
@@ -1106,7 +1065,6 @@ function LessonPlayer({
                   </div>
                 </div>
 
-                {/* Progress dots */}
                 <div className="av2-vc-dots">
                   {vocab.map((_, i) => (
                     <button
@@ -1118,7 +1076,6 @@ function LessonPlayer({
                   ))}
                 </div>
 
-                {/* Navigation */}
                 <div className="av2-vc-nav">
                   <button
                     className="av2-vc-nav-btn"
@@ -1152,11 +1109,9 @@ function LessonPlayer({
             );
           })()}
 
-          {/* STEP: PRACTICE */}
           {step === 'practice' && currentQ && (
             <div className="av2-lc-body av2-pq-body">
 
-              {/* Top bar: segmented progress + streak */}
               <div className="av2-pq-topbar">
                 <div className="av2-pq-track">
                   {practice.map((_, i) => (
@@ -1171,7 +1126,6 @@ function LessonPlayer({
                 )}
               </div>
 
-              {/* Question card */}
               <div
                 key={`qcard-${practiceIdx}`}
                 className={`av2-pq-card${feedback === 'correct' ? ' av2-pq-card--ok' : feedback === 'wrong' ? ' av2-pq-card--fail' : ''}`}
@@ -1185,7 +1139,6 @@ function LessonPlayer({
                 <div className="av2-pq-text">{currentQ.question}</div>
               </div>
 
-              {/* MCQ options */}
               {currentQ.options && currentQ.options.length > 0 && (
                 <div className="av2-pq-opts" key={`opts-${practiceIdx}`}>
                   {currentQ.options.map((opt, i) => {
@@ -1217,7 +1170,6 @@ function LessonPlayer({
                 </div>
               )}
 
-              {/* Open text input */}
               {(!currentQ.options || currentQ.options.length === 0) && (
                 <div className="av2-pq-open">
                   <input
@@ -1237,7 +1189,6 @@ function LessonPlayer({
                 </div>
               )}
 
-              {/* Feedback row */}
               {feedback && (
                 <div className={`av2-pq-fb av2-pq-fb--${feedback}`}>
                   <span className="av2-pq-fb-icon">{feedback === 'correct' ? '🎉' : '💪'}</span>
@@ -1253,7 +1204,6 @@ function LessonPlayer({
                 </div>
               )}
 
-              {/* Next button */}
               {feedback && (
                 <button className="av2-pq-next" onClick={handleNext}>
                   {isLastQ ? '🏁 Ver mi resultado' : 'Siguiente pregunta →'}
@@ -1263,7 +1213,6 @@ function LessonPlayer({
             </div>
           )}
 
-          {/* STEP: DONE */}
           {step === 'done' && (
             <div className="av2-lc-body av2-done">
               <div className="av2-done-title">¡Lección completada!</div>
@@ -1309,7 +1258,6 @@ function LessonPlayer({
   );
 }
 
-// ── ExamPlayer ────────────────────────────────────────────────────────────────
 
 function ExamPlayer({
   exam,

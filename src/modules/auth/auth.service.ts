@@ -123,7 +123,6 @@ export class AuthService implements OnModuleInit {
     await this.seedDefaultUsers();
   }
 
-  // ── Password ───────────────────────────────────────────────────────────────
 
   hashPassword(password: string): Promise<string> {
     return argon2.hash(password, {
@@ -142,7 +141,6 @@ export class AuthService implements OnModuleInit {
     }
   }
 
-  // ── JWT ────────────────────────────────────────────────────────────────────
 
   signToken(payload: Omit<JwtPayload, 'iat' | 'exp' | 'iss' | 'aud'>): Promise<string> {
     return this.jwt.signAsync(payload);
@@ -324,7 +322,6 @@ export class AuthService implements OnModuleInit {
     return null;
   }
 
-  // ── Auth ───────────────────────────────────────────────────────────────────
 
   async login(
     email: string,
@@ -364,7 +361,6 @@ export class AuthService implements OnModuleInit {
     return { changed: true };
   }
 
-  // ── Recuperación de contraseña ──────────────────────────────────────────────
 
   /**
    * Genera un código de 6 dígitos y lo envía por correo. Responde siempre
@@ -480,7 +476,6 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  // ── Seed ───────────────────────────────────────────────────────────────────
 
   private async seedAdmin(): Promise<void> {
     const adminEmail = this.config.get<string>('ADMIN_EMAIL')?.trim().toLowerCase();

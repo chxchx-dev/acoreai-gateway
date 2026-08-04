@@ -23,7 +23,6 @@ export class LanguageProfileController {
     const user = (req as unknown as Record<string, JwtUser>)['jwtUser'];
     const dashboard = await this.profileService.getDashboard(user.sub);
     if (dashboard) return dashboard;
-    // Auto-create profile on first visit
     await this.profileService.getOrCreate(user.sub);
     return this.profileService.getDashboard(user.sub);
   }

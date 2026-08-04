@@ -19,7 +19,6 @@ function jwtUser(req: Request): JwtPayload {
 export class KnowledgeTestController {
   constructor(private readonly knowledgeTestService: KnowledgeTestService) {}
 
-  // Fase 7: 30 requests/hora por supervisor.
   @Throttle({ default: { limit: 30, ttl: 3600000 } })
   @Post()
   test(@Body() dto: TestQuestionDto, @Req() req: Request) {

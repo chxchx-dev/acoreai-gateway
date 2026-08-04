@@ -33,7 +33,6 @@ function collapseBlankLines(text: string): string {
     .trim();
 }
 
-// ── PDF ──────────────────────────────────────────────────────────────────
 // pdf-parse extrae texto plano por página, sin estructura semántica (un PDF no
 // sabe qué es un "encabezado", solo tiene texto posicionado). Por eso esto es
 // heurístico y best-effort: no reconstruye Markdown perfecto, solo evita que
@@ -84,7 +83,6 @@ export async function parsePdfToMarkdown(buffer: Buffer): Promise<ParsedDocument
   }
 }
 
-// ── DOCX ─────────────────────────────────────────────────────────────────
 // mammoth entiende el formato real de Word (estilos "Heading 1", listas,
 // negritas) y lo traduce a HTML semántico; turndown convierte ESE HTML a MD.
 // A diferencia del PDF, acá la estructura no es adivinada: es la que el
@@ -106,7 +104,6 @@ export async function parseDocxToMarkdown(buffer: Buffer): Promise<ParsedDocumen
   return { markdown, suggestedTitle: titleMatch?.[1]?.trim() ?? null, warnings };
 }
 
-// ── URL ──────────────────────────────────────────────────────────────────
 // Readability es el mismo motor del "modo lectura" de Firefox: separa el
 // artículo real (texto útil) de menús/publicidad/sidebars antes de convertir
 // a Markdown. Sin esto, una página normal ensucia el RAG con navegación.

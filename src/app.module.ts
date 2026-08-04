@@ -13,7 +13,6 @@ import { MailModule } from 'src/infrastructure/mail/mail.module';
 import { LogsModule } from 'src/modules/logs/logs.module';
 import { ChatModule } from 'src/modules/chat/chat.module';
 import { ConversationsModule } from 'src/modules/conversations/conversations.module';
-import { DocumentsModule } from 'src/modules/documents/documents.module';
 import { TtsModule } from 'src/modules/tts/tts.module';
 import { TranslateModule } from 'src/modules/translate/translate.module';
 import { SttModule } from 'src/modules/stt/stt.module';
@@ -47,7 +46,6 @@ import { MetricsInterceptor } from './infrastructure/observability/metrics.inter
     AiOrchestratorModule,
     ConversationsModule,
     ChatModule,
-    DocumentsModule,
     TtsModule,
     TranslateModule,
     SttModule,

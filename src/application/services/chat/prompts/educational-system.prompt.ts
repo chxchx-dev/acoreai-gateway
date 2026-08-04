@@ -62,7 +62,6 @@ Reglas obligatorias:
 CONTEXTO:
 {{context}}`;
 
-// ── Voice mode prompt (applied server-side for all roles) ─────────────────────
 export const ACOREAI_VOICE_PROMPT_BACKEND = `Eres ACoreAI, asistente academico. Estas en una conversacion de voz en tiempo real.
 
 Reglas estrictas para voz:
@@ -75,7 +74,6 @@ Reglas estrictas para voz:
 7. Usa ejemplos concretos en lugar de definiciones formales.
 8. Tono cercano y academico, como un colega experto que explica en voz alta.`.trim();
 
-// ── English practice prompts (applied server-side for all roles) ──────────────
 // Se mantiene el nombre/forma original (solo inglés) por compatibilidad con
 // cualquier referencia existente; el nuevo selector multi-idioma vive en
 // PRACTICE_PROMPTS_BY_LANG más abajo, con 'en' apuntando a este mismo objeto.
@@ -113,7 +111,6 @@ ${PRACTICE_CORRECTION_RULE}
 - Push them with real questions: "What's your take?", "Can you say that differently?", "Give me an example."`.trim(),
 };
 
-// ── Practice prompts por idioma (mode: 'practice') ─────────────────────────────
 // Clave externa = practiceLanguage enviado por el cliente ('en'|'fr'|'de'|'it'|'pt'|'zh').
 // Clave interna = practiceLevel ('Principiante'|'Aprendiz'|'Explorador').
 const FRENCH_PRACTICE_PROMPTS: Record<string, string> = {

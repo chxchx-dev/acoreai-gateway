@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 
-// ── Contador de palabras para highlighting TTS ────────────────────────────────
 let _wc = 0;
 
 function countWords(text: string): number {
@@ -62,7 +61,6 @@ function parseInline(
   return <>{parts}</>;
 }
 
-// ── Bloque de código con botón copiar ─────────────────────────────────────────
 function CodeBlock({ lang, code }: { lang: string; code: string }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
@@ -84,7 +82,6 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
   );
 }
 
-// ── Helpers para tablas ───────────────────────────────────────────────────────
 function parseCells(line: string): string[] {
   return line.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
 }
@@ -102,7 +99,6 @@ function parseHeading(line: string): { level: number; text: string } | null {
   };
 }
 
-// ── Componente principal ──────────────────────────────────────────────────────
 export interface MarkdownProps {
   content: string;
   activeWordIdx?: number;
@@ -122,7 +118,6 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
   while (i < lines.length) {
     const line = lines[i];
 
-    // ── Fenced code block ─────────────────────────────────────────────────────
     if (line.startsWith('```')) {
       const lang = line.slice(3).trim();
       const codeLines: string[] = [];
@@ -138,7 +133,6 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
       continue;
     }
 
-    // ── Tabla markdown ────────────────────────────────────────────────────────
     if (line.includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1])) {
       const headers = parseCells(line);
       i += 2; // saltar cabecera + separador
@@ -163,7 +157,6 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
       continue;
     }
 
-    // ── Blockquote ────────────────────────────────────────────────────────────
     if (line.startsWith('> ')) {
       const bqLines: React.ReactNode[] = [];
       while (i < lines.length && lines[i].startsWith('> ')) {
@@ -174,7 +167,6 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
       continue;
     }
 
-    // ── Headings ──────────────────────────────────────────────────────────────
     const heading = parseHeading(line);
     if (heading) {
       const headingNode = parseInline(heading.text, activeWordIdx, streamFromIdx);
@@ -182,7 +174,6 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
       else if (heading.level === 2) nodes.push(<h2 key={i}>{headingNode}</h2>);
       else nodes.push(<h3 key={i}>{headingNode}</h3>);
 
-    // ── Listas ────────────────────────────────────────────────────────────────
     } else if (/^[-*+] /.test(line)) {
       const items: React.ReactNode[] = [];
       while (i < lines.length && /^[-*+] /.test(lines[i])) {
@@ -200,11 +191,9 @@ export function Markdown({ content, activeWordIdx, streaming = false }: Markdown
       nodes.push(<ol key={`ol${i}`}>{items}</ol>);
       continue;
 
-    // ── HR ────────────────────────────────────────────────────────────────────
     } else if (/^[-*]{3,}$/.test(line.trim())) {
       nodes.push(<hr key={i} />);
 
-    // ── Párrafo ───────────────────────────────────────────────────────────────
     } else if (line.trim() !== '') {
       nodes.push(<p key={i}>{parseInline(line, activeWordIdx, streamFromIdx)}</p>);
     }

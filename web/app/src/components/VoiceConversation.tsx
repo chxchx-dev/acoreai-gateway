@@ -100,12 +100,10 @@ export function VoiceConversation({
     try {
       srcRef.current?.stop();
     } catch {
-      /* ok */
     }
     try {
       audioCtxRef.current?.close();
     } catch {
-      /* ok */
     }
     srcRef.current = audioCtxRef.current = null;
     playingRef.current = false;
@@ -117,7 +115,6 @@ export function VoiceConversation({
     try {
       recorderRef.current?.stop();
     } catch {
-      /* ok */
     }
     recorderRef.current = null;
     queueRef.current = [];
@@ -363,10 +360,8 @@ export function VoiceConversation({
 
   return (
     <>
-      {/* ── Área principal: orb + transcript ── */}
       <section className="vc-content">
         <div className="vc-stage">
-          {/* Orb — botón principal */}
           <button
             className={`vc-orb vc-orb--${phase} ${isOrbClickable ? "vc-orb--tap" : ""}`}
             onClick={isOrbClickable ? handleOrbClick : undefined}
@@ -384,7 +379,6 @@ export function VoiceConversation({
           <p className="vc-status">{error || orbLabel}</p>
         </div>
 
-        {/* Transcript */}
         <div className="vc-transcript" ref={transcriptRef}>
           {turns.length === 0 && !liveText && (
             <p className="vc-hint">Toca el botón para comenzar</p>
@@ -409,7 +403,6 @@ export function VoiceConversation({
         </div>
       </section>
 
-      {/* ── Barra inferior ── */}
       <div className="vc-bar">
         <span className="vc-bar-label">
           <span

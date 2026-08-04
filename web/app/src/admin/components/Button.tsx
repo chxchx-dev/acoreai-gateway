@@ -24,9 +24,6 @@ const SIZE_CLASSES: Record<Size, string> = {
   md: 'px-4 py-2 text-sm',
 };
 
-// Primitivo compartido de botón: reemplaza las clases de Tailwind repetidas a
-// mano en cada página (bg-brand-600/border-slate-300/border-red-200...) por
-// un único lugar que define look-and-feel, estado disabled y loading.
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', icon, loading, disabled, className = '', children, ...rest }, ref) => {
     return (

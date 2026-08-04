@@ -258,7 +258,6 @@ const INTEREST_TOPIC_MAP: Record<string, { levelKey: EnglishLevelKey; topicLabel
 function getTopicsForInterest(interest: string) {
   const key = interest.toLowerCase().trim();
   if (INTEREST_TOPIC_MAP[key]) return INTEREST_TOPIC_MAP[key];
-  // fuzzy fallback
   for (const [mapKey, topics] of Object.entries(INTEREST_TOPIC_MAP)) {
     if (key.includes(mapKey) || mapKey.includes(key)) return topics;
   }
@@ -639,12 +638,10 @@ export function UserApp() {
     window.localStorage.setItem("acoreai-web:theme", theme);
   }, [theme]);
 
-  // Sync histTab when user switches main tab (one-way: tab → histTab only)
   useEffect(() => {
     setHistTab(tab === 'translate' ? 'idiomas' : 'investigacion');
   }, [tab]);
 
-  // Daily suggestion — generated once per day per user, cached in localStorage
   useEffect(() => {
     if (!user || !aiProfile) return;
     const CACHE_KEY = `acoreai-web:daily-suggestion:${user.id}`;
@@ -742,7 +739,6 @@ export function UserApp() {
       setTranslSaved(true);
       window.setTimeout(() => setTranslSaved(false), 2000);
     } catch {
-      // silently fail — user can retry
     }
   }
 
@@ -752,7 +748,6 @@ export function UserApp() {
     try {
       await deleteTranslationFromServer(id, user.token);
     } catch {
-      // optimistic delete — refetch on next open
     }
   }
 
@@ -780,7 +775,6 @@ export function UserApp() {
       .catch(() => setHealth("offline"));
     refreshConversations();
     refreshTranslationHistory();
-    // Sync profile from API in background (localStorage already has the cached version)
     fetchAndCacheProfile(user.id, user.token)
       .then(profile => { if (profile) setAiProfile(profile); })
       .catch(() => undefined);
@@ -992,7 +986,6 @@ export function UserApp() {
       return;
     }
 
-    // Modo perspectivas
     const assistantMessage: UiMessage = {
       id: assistantId,
       role: "assistant",
@@ -1007,7 +1000,6 @@ export function UserApp() {
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
 
     try {
-      // "Investigacion" tab → multi-perspective mode
       const perspResult = await streamPerspectives(
         {
           question,
@@ -1125,7 +1117,6 @@ export function UserApp() {
       try {
         translAudioRef.current.source.stop();
       } catch {
-        /* ya terminó */
       }
       translAudioRef.current.ctx.close();
       translAudioRef.current = null;
@@ -1192,7 +1183,6 @@ export function UserApp() {
       try {
         audioCtxRef.current.source.stop();
       } catch {
-        /* ya terminó */
       }
       audioCtxRef.current.ctx.close();
       audioCtxRef.current = null;
@@ -1444,7 +1434,6 @@ export function UserApp() {
           const profile = await fn(user.id, data, user.token);
           setAiProfile(profile);
           setEditingProfile(false);
-          // Redirect to primary mode after onboarding
           if (profile.preferredMode === 'languages') {
             setTab('translate');
             setIdiomasTab('home');
@@ -1537,7 +1526,6 @@ export function UserApp() {
           </>
         ) : (
           <div className="hist-idiomas-scroll">
-            {/* ── Práctica ── */}
             <div className="hist-section-label">🎯 Práctica de inglés</div>
             <div className="conversation-list">
               {pracicarConversations.map((conv) => {
@@ -1643,7 +1631,6 @@ export function UserApp() {
 
       <section className={`workspace${voiceOpen ? " workspace--voice" : ""}`}>
         <header className="topbar">
-          {/* ── Left: sidebar toggle + brand + breadcrumb ── */}
           <div className="topbar-left">
             <button
               className="icon-button topbar-panel-toggle"
@@ -1694,9 +1681,7 @@ export function UserApp() {
             </button>
           </div>
 
-          {/* ── Right: badges + actions + avatar ── */}
           <div className="topbar-right">
-            {/* Dynamic mode badge — one per sub-mode */}
             {tab === 'translate' ? (
               idiomasTab === 'practicar' ? (
                 <div className="topbar-badge topbar-badge--purple">
@@ -1764,12 +1749,10 @@ export function UserApp() {
                 </div>
               ) : welcomeVisible ? (
                 <div className="welcome-panel">
-                  {/* Animated background layers */}
                   <div className="wp-bg-grid" />
                   <div className="wp-bg-blob wp-bg-blob--1" />
                   <div className="wp-bg-blob wp-bg-blob--2" />
 
-                  {/* Hero */}
                   <div className="wp-hero">
                     <div className="wp-acoreai-wrap">
                       <div className="wp-acoreai-ring wp-acoreai-ring--outer" />
@@ -1818,7 +1801,6 @@ export function UserApp() {
                     )}
                   </div>
 
-                  {/* Tab switcher */}
                   <div className="wp-tabs">
                     <button
                       className={`wp-tab${welcomeTab === 'routes' ? ' wp-tab--active' : ''}`}
@@ -1837,7 +1819,6 @@ export function UserApp() {
                     </button>
                   </div>
 
-                  {/* Switchable content */}
                   {welcomeTab === 'routes' ? (
                     <div className="wp-routes">
                       <div className="wp-routes-grid">
@@ -2193,8 +2174,6 @@ export function UserApp() {
                   {([
                     { key: 'home'     as const, icon: <Sparkles size={18} />,  label: 'Inicio',   desc: 'Para ti',     color: 'teal'   },
                     { key: 'traducir' as const, icon: <Languages size={18} />, label: 'Traducir', desc: 'Multilingüe', color: 'blue'   },
-                    // Modo aventura deshabilitado para despliegue en server.
-                    // { key: 'aventura' as const, icon: <Trophy size={18} />,    label: 'Aventura', desc: 'Gamificado',  color: 'amber'  },
                   ]).map(item => (
                     <button
                       key={item.key}
@@ -2214,13 +2193,11 @@ export function UserApp() {
                 </nav>
                 <div className="idiomas-subnav-content" key={idiomasTab}>
                 {idiomasTab === 'home' ? (
-              /* ── Idiomas Home v2 ── */
               (() => {
                 const hour = new Date().getHours();
                 const greeting = hour < 12 ? 'Buenos días' : hour < 18 ? 'Buenas tardes' : 'Buenas noches';
                 const firstName = user.name.split(' ')[0];
 
-                // Flatten personalized topics (deduped)
                 const personalizedTopics: { level: EnglishLevelDef; topic: { emoji: string; label: string; starter: string }; interest: string }[] = [];
                 if (aiProfile && aiProfile.interestTopics.length > 0) {
                   const seen = new Set<string>();
@@ -2234,7 +2211,6 @@ export function UserApp() {
 
                 return (
                   <section className="ih2">
-                    {/* ── Hero greeting ── */}
                     <div className="ih2-hero">
                       <div className="ih2-hero-left">
                         <div className="ih2-greet">{greeting}, {firstName} 👋</div>
@@ -2249,13 +2225,7 @@ export function UserApp() {
                       <div className="ih2-hero-deco" aria-hidden>🌐</div>
                     </div>
 
-                    {/* ── Quick actions ── */}
                     <div className="ih2-actions">
-                      {/* Modo aventura deshabilitado para despliegue en server.
-                      <button className="ih2-qa ih2-qa--amber" onClick={() => setIdiomasTab('aventura')}>
-                        <Trophy size={16} /><span>Aventura</span>
-                      </button>
-                      */}
                       <button className="ih2-qa ih2-qa--blue" onClick={() => setIdiomasTab('traducir')}>
                         <Languages size={16} /><span>Traducir</span>
                       </button>
@@ -2273,7 +2243,6 @@ export function UserApp() {
                       )}
                     </div>
 
-                    {/* ── Para ti ── */}
                     {personalizedTopics.length > 0 && (
                       <div className="ih2-section">
                         <div className="ih2-section-hd">
@@ -2310,7 +2279,6 @@ export function UserApp() {
                       </div>
                     )}
 
-                    {/* ── Por Nivel ── */}
                     <div className="ih2-section ih2-section--nivel">
                       <div className="ih2-section-hd">
                         <Layers size={14} />
@@ -2318,7 +2286,6 @@ export function UserApp() {
                         <span className="ih2-section-sub">elige tu nivel y comienza</span>
                       </div>
 
-                      {/* Level cards */}
                       <div className="ih2-level-row">
                         {ENGLISH_LEVELS.map((l, idx) => (
                           <button
@@ -2336,7 +2303,6 @@ export function UserApp() {
                         ))}
                       </div>
 
-                      {/* Categories + topics */}
                       {(() => {
                         const level = ENGLISH_LEVELS[homeSelectedLevelIdx];
                         return (
@@ -2373,7 +2339,6 @@ export function UserApp() {
                       })()}
                     </div>
 
-                    {/* ── Empty state (no profile) ── */}
                     {!aiProfile && (
                       <div className="idiomas-home-empty">
                         <Languages size={36} />
@@ -2406,7 +2371,6 @@ export function UserApp() {
             ) : (
           <section className="translate-panel">
 
-            {/* ── Selector de idiomas: origen ⇄ destino ── */}
             <div className="translate-lang-row">
               <div className="translate-lang-group">
                 <span className="translate-lang-group-label">De</span>
@@ -2473,10 +2437,8 @@ export function UserApp() {
               </div>
             </div>
 
-            {/* ── Split: input left / result right ── */}
             <div className="translate-split">
 
-              {/* Left: source input */}
               {(() => {
                 const srcEntry = LANGUAGES.find(l => l.key === translateSourceLang);
                 return (
@@ -2547,7 +2509,6 @@ export function UserApp() {
                 );
               })()}
 
-              {/* Right: translation results */}
               {(() => {
                 const tgtEntry = LANGUAGES.find(l => l.key === translateLangs[0]);
                 return (

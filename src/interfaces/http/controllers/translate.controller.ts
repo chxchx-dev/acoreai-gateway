@@ -36,7 +36,6 @@ class ListHistoryQueryDto {
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(200) limit?: number;
 }
 
-// ── DTOs para endpoints mobile (sin JWT) ────────────────────────────────────
 class SaveHistoryAppDto {
   @IsString() @IsNotEmpty() userId!: string;
   @IsString() @IsNotEmpty() title!: string;
@@ -84,7 +83,6 @@ export class TranslateController {
     return this.translateService.translateStream(dto, req, res);
   }
 
-  // ── Translation history ──────────────────────────────────────────────────
 
   @UseGuards(JwtAuthGuard)
   @Post('history')
@@ -108,7 +106,6 @@ export class TranslateController {
     return this.translationSaveService.delete(id, userId);
   }
 
-  // ── Historial mobile (solo ApiKeyGuard, userId en body/query) ────────────
 
   @UseGuards(ApiKeyGuard, DeviceLockGuard)
   @Post('history/app')
@@ -130,7 +127,6 @@ export class TranslateController {
     return this.translationSaveService.delete(id, userId);
   }
 
-  // ── Administración del cache de traducciones (Mongo, uno por idioma) ─────
 
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get('cache/stats')

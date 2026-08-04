@@ -15,7 +15,6 @@ Reglas de comportamiento:
 10. Cierra con una siguiente accion concreta cuando sea util.
 `.trim();
 
-// ── English Practice ──────────────────────────────────────────────────────────
 
 export type EnglishLevelKey = 'Principiante' | 'Aprendiz' | 'Explorador';
 
@@ -248,7 +247,6 @@ export function makeEnglishPracticePrompt(levelKey: EnglishLevelKey): string {
   return (ENGLISH_LEVELS.find(l => l.key === levelKey) ?? ENGLISH_LEVELS[0]).prompt;
 }
 
-// ── Modo voz ──────────────────────────────────────────────────────────────────
 
 export const ACOREAI_VOICE_PROMPT = `
 Eres ACoreAI, asistente académico. Estas en una conversación de voz en tiempo real.

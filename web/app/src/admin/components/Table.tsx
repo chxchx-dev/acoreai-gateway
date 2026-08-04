@@ -1,8 +1,5 @@
 import type { TableHTMLAttributes, HTMLAttributes, ThHTMLAttributes, TdHTMLAttributes } from 'react';
 
-// Primitivos de tabla compartidos: mismo look (header en mayúsculas gris,
-// filas con hover, bordes sutiles) para todas las páginas que hoy arman un
-// <table> a mano con clases repetidas (Fuentes, Automatización, Auditoría...).
 
 export function Table({ className = '', ...rest }: TableHTMLAttributes<HTMLTableElement>) {
   return (

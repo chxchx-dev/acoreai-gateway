@@ -10,7 +10,6 @@ import type {
 const logoAiACoreAI = undefined;
 const acoreaiHola = undefined;
 
-// ── Data ───────────────────────────────────────────────────────────────────────
 
 const TOPICS = [
   'Tecnología', 'Videojuegos', 'Música', 'Películas y series', 'Deportes',
@@ -56,7 +55,6 @@ const PRACTICE_STYLES: { value: PracticeStyle; label: string; emoji: string }[] 
   { value: 'academic_presentation', label: 'Presentación académica', emoji: '🎓' },
 ];
 
-// ── Label helpers ──────────────────────────────────────────────────────────────
 
 export const LEVEL_LABELS: Record<EnglishLevel, string> = {
   beginner: 'Principiante 🌱',
@@ -86,7 +84,6 @@ export const CORRECTION_LABELS: Record<CorrectionStyle, string> = {
   strict: 'Estricto 🎯',
 };
 
-// ── Wizard ─────────────────────────────────────────────────────────────────────
 
 interface Props {
   userId: string;
@@ -154,13 +151,11 @@ export function AiOnboardingWizard({ userId: _userId, userName, onComplete }: Pr
       <div className="ob-bg-grid" />
 
       <div className="ob-card">
-        {/* Logo */}
         <div className="ob-logo-row">
           <img src={logoAiACoreAI} alt="ACoreAI" className="ob-logo" />
           <span className="ob-logo-name">ACoreAI</span>
         </div>
 
-        {/* Progress dots — only on config steps 1-6 */}
         {configStep !== null && (
           <div className="ob-progress">
             {Array.from({ length: TOTAL_CONFIG_STEPS }).map((_, i) => (
@@ -172,7 +167,6 @@ export function AiOnboardingWizard({ userId: _userId, userName, onComplete }: Pr
           </div>
         )}
 
-        {/* Step content */}
         <div className="ob-step-content">
           {step === 0 && <StepWelcome firstName={firstName} />}
           {step === 1 && (
@@ -211,7 +205,6 @@ export function AiOnboardingWizard({ userId: _userId, userName, onComplete }: Pr
           {step === 7 && <StepSummary draft={draft} firstName={firstName} />}
         </div>
 
-        {/* Navigation */}
         <div className={`ob-nav${step > 0 ? ' ob-nav--split' : ''}`}>
           {step > 0 && (
             <button className="ob-btn-back" onClick={back} type="button">
@@ -241,7 +234,6 @@ export function AiOnboardingWizard({ userId: _userId, userName, onComplete }: Pr
   );
 }
 
-// ── Steps ──────────────────────────────────────────────────────────────────────
 
 function StepWelcome({ firstName }: { firstName: string }) {
   return (

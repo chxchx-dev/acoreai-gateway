@@ -3,7 +3,6 @@ import { fetchAiProfile, saveAiProfile, updateAiProfile, type AiProfileData } fr
 
 const STORAGE_KEY = 'acoreai-web:ai-profile';
 
-// ── Synchronous localStorage (used for fast initial state) ────────────────────
 
 export function loadProfile(userId: string): UserAiProfile | null {
   try {
@@ -25,7 +24,6 @@ export function clearProfile(): void {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
-// ── API + cache ───────────────────────────────────────────────────────────────
 
 function fromApiData(data: AiProfileData): UserAiProfile {
   return {

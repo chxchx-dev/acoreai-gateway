@@ -19,7 +19,6 @@ export type SavedTranslation = {
 const CONV_TAGS_KEY   = 'acoreai-web:conv-tags';
 const TRANSL_SAVE_KEY = 'acoreai-web:saved-translations';
 
-// ── Conversation tags ─────────────────────────────────────────────────────────
 
 export function getAllConvTags(): Record<string, ConvTag> {
   try {
@@ -43,7 +42,6 @@ export function removeConvTag(id: string): void {
   window.localStorage.setItem(CONV_TAGS_KEY, JSON.stringify(all));
 }
 
-// ── Saved translations ────────────────────────────────────────────────────────
 
 export function getSavedTranslations(): SavedTranslation[] {
   try {

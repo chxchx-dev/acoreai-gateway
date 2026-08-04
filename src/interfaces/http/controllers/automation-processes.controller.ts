@@ -72,7 +72,6 @@ export class AutomationProcessesController {
     return this.processes.remove(id);
   }
 
-  // ── Pasos ──────────────────────────────────────────────────────────────
   @Post(':id/steps')
   @RequireAutomationAction('manage_process')
   addStep(@Param('id') id: string, @Body() dto: UpsertAutomationStepDto) {
@@ -92,7 +91,6 @@ export class AutomationProcessesController {
     return this.processes.removeStep(stepId);
   }
 
-  // ── Campos ─────────────────────────────────────────────────────────────
   @Post(':id/fields')
   @RequireAutomationAction('manage_process')
   addField(@Param('id') id: string, @Body() dto: UpsertAutomationFieldDto) {
@@ -112,7 +110,6 @@ export class AutomationProcessesController {
     return this.processes.removeField(fieldId);
   }
 
-  // ── Reglas ─────────────────────────────────────────────────────────────
   @Post(':id/rules')
   @RequireAutomationAction('manage_process')
   upsertRule(@Param('id') id: string, @Body() dto: UpsertAutomationRuleDto) {
@@ -126,7 +123,6 @@ export class AutomationProcessesController {
     return this.processes.removeRule(ruleId);
   }
 
-  // ── Plantillas de payload ────────────────────────────────────────────────
   @Post(':id/templates')
   @RequireAutomationAction('manage_process')
   upsertTemplate(@Param('id') id: string, @Body() dto: UpsertAutomationTemplateDto) {
@@ -140,7 +136,6 @@ export class AutomationProcessesController {
     return this.processes.removeTemplate(templateId);
   }
 
-  // ── Checklist de validación ──────────────────────────────────────────────
   @Post(':id/checklist')
   @RequireAutomationAction('manage_process')
   addChecklistItem(@Param('id') id: string, @Body() dto: UpsertAutomationChecklistItemDto) {

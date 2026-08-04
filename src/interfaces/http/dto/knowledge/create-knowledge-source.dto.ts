@@ -66,7 +66,6 @@ export class CreateKnowledgeSourceDto {
   @IsBoolean()
   allowDuplicate?: boolean;
 
-  // ── Metadata de procedencia (opcional) ──────────────────────────────────
   // Cuando el "content" viene de convertir un PDF/DOCX/URL a Markdown (ver
   // /knowledge/sources/convert/*) y el usuario ya lo revisó, estos campos
   // preservan de dónde salió el texto aunque se guarde como sourceType "text".

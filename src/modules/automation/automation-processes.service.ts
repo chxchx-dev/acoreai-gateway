@@ -95,7 +95,6 @@ export class AutomationProcessesService {
     await this.prisma.automationProcess.delete({ where: { id } });
   }
 
-  // ── Pasos ──────────────────────────────────────────────────────────────
   async addStep(processId: string, dto: UpsertAutomationStepDto) {
     await this.requireProcess(processId);
     const order = dto.order ?? (await this.prisma.automationStep.count({ where: { processId } })) + 1;
@@ -121,7 +120,6 @@ export class AutomationProcessesService {
     return step;
   }
 
-  // ── Campos ─────────────────────────────────────────────────────────────
   async addField(processId: string, dto: UpsertAutomationFieldDto) {
     await this.requireProcess(processId);
     const order = dto.order ?? (await this.prisma.automationField.count({ where: { processId } })) + 1;
@@ -164,7 +162,6 @@ export class AutomationProcessesService {
     return field;
   }
 
-  // ── Reglas ─────────────────────────────────────────────────────────────
   async upsertRule(processId: string, dto: UpsertAutomationRuleDto) {
     await this.requireProcess(processId);
     return this.prisma.automationRule.upsert({
@@ -180,7 +177,6 @@ export class AutomationProcessesService {
     await this.prisma.automationRule.delete({ where: { id: ruleId } });
   }
 
-  // ── Plantillas de payload ───────────────────────────────────────────────
   async upsertTemplate(processId: string, dto: UpsertAutomationTemplateDto) {
     await this.requireProcess(processId);
     return this.prisma.automationPayloadTemplate.upsert({
@@ -196,7 +192,6 @@ export class AutomationProcessesService {
     await this.prisma.automationPayloadTemplate.delete({ where: { id: templateId } });
   }
 
-  // ── Checklist de validación ─────────────────────────────────────────────
   async addChecklistItem(processId: string, dto: UpsertAutomationChecklistItemDto) {
     await this.requireProcess(processId);
     const order =

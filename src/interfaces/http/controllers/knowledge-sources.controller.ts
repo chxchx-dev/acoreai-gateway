@@ -69,7 +69,6 @@ export class KnowledgeSourcesController {
     private readonly knowledgePublishingService: KnowledgePublishingRepositoryPort,
   ) {}
 
-  // Fase 7: 10 cargas/hora por usuario.
   @Throttle({ default: { limit: 10, ttl: 3600000 } })
   @Post()
   @RequireKnowledgeAction('create_source')

@@ -17,9 +17,6 @@ export default {
         },
       },
       boxShadow: {
-        // Sombra suave de 2 capas (tipo "elevación 1" de un dashboard SaaS) en
-        // vez del shadow-sm plano por defecto de Tailwind — da profundidad sin
-        // verse pesada.
         card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 2px 8px -2px rgb(15 23 42 / 0.06)',
         'card-hover': '0 2px 4px 0 rgb(15 23 42 / 0.06), 0 8px 16px -4px rgb(15 23 42 / 0.10)',
       },

@@ -52,7 +52,6 @@ export class LanguageAdventureController {
     return this.profileService.getDashboard(this.user(req).sub);
   }
 
-  // ── Phase generation ──────────────────────────────────────────────────────
 
   @Post('phases/generate')
   @HttpCode(HttpStatus.CREATED)
@@ -75,7 +74,6 @@ export class LanguageAdventureController {
     return this.generationService.listPhases(profile.id);
   }
 
-  // ── Lessons ───────────────────────────────────────────────────────────────
 
   @Post('lessons/:lessonId/start')
   @HttpCode(HttpStatus.OK)
@@ -97,7 +95,6 @@ export class LanguageAdventureController {
     return this.lessonService.completeLesson(profile.id, lessonId, body);
   }
 
-  // ── Exams ─────────────────────────────────────────────────────────────────
 
   @Get('exams/:examId')
   async getExam(@Req() req: Request, @Param('examId') examId: string) {
@@ -117,7 +114,6 @@ export class LanguageAdventureController {
     return this.examService.submitAttempt(profile.id, examId, body.answers);
   }
 
-  // ── Hidden Levels ─────────────────────────────────────────────────────────
 
   @Get('hidden-levels')
   async getHiddenLevels(@Req() req: Request) {

@@ -389,7 +389,6 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
       <div className="lp-body">
 
         {isEmpty ? (
-          /* ── Landing ── */
           <div className="lp-landing">
 
             {/* Level selector */}
@@ -439,7 +438,6 @@ export function LanguagePractice({ open, onClose, user, model, onConversationCha
           </div>
 
         ) : (
-          /* ── Chat transcript ── */
           <div className="lp-chat" ref={transcriptRef}>
             <button type="button" className="lp-back-btn" onClick={resetToHome}>
               ← Topics

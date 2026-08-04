@@ -23,9 +23,6 @@ export const STATUS_LABELS: Record<string, string> = {
   error: 'Error',
 };
 
-// Un punto de color en vez de una píldora con fondo lleno: mismo significado
-// semántico por estado, pero más liviano visualmente ("dot + label" en vez de
-// "badge soup") — estilo típico de dashboards SaaS modernos.
 const DOT_COLORS: Record<string, string> = {
   draft: 'bg-slate-400',
   pending_extraction: 'bg-amber-500',

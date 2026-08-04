@@ -15,7 +15,6 @@ function jwtUser(req: Request): JwtPayload | undefined {
 export class ChatRagController {
   constructor(private readonly knowledgeChatService: KnowledgeChatService) {}
 
-  // Fase 7: 20 requests/min por usuario/IP.
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   @Post()
   ask(@Body() dto: ChatRagDto, @Req() req: Request) {
