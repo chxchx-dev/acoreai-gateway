@@ -61,14 +61,14 @@ services:
   # ── Plataforma ACoreAI ────────────────────────────────────────────────────────
   acoreai-web:
     build:
-      context: ./web/acoreai
+      context: ./web/app
       dockerfile: Dockerfile.dev
     working_dir: /app
     command:
       [
         "sh",
         "-lc",
-        "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5175",
+        "if [ ! -d node_modules/vite ]; then pnpm install --frozen-lockfile; fi && pnpm run dev -- --host 0.0.0.0 --port 5175",
       ]
     environment:
       NODE_ENV: development
@@ -78,39 +78,10 @@ services:
       VITE_AI_GATEWAY_LOCAL_URL: http://acoreai-gateway:4005
       AI_GATEWAY_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
     volumes:
-      - ./web/acoreai:/app
+      - ./web/app:/app
       - acoreai_web_node_modules:/app/node_modules
     ports: !override
       - "5175:5175"
-    depends_on:
-      acoreai-gateway:
-        condition: service_healthy
-
-  # acoreai-web se despliega en servidor independiente — no corre en este compose.
-
-  # ── Centro de Conocimiento (panel admin RAG) ──────────────────────────────────
-  admin-web:
-    build:
-      context: ./web/admin
-      dockerfile: Dockerfile.dev
-    working_dir: /app
-    command:
-      [
-        "sh",
-        "-lc",
-        "if [ ! -d node_modules/vite ]; then npm ci; fi && npm run dev -- --host 0.0.0.0 --port 5180",
-      ]
-    environment:
-      NODE_ENV: development
-      CHOKIDAR_USEPOLLING: "true"
-      CHOKIDAR_INTERVAL: "1000"
-      VITE_GATEWAY_LOCAL_URL: http://acoreai-gateway:4005
-      VITE_GATEWAY_LOCAL_KEY: ${AI_GATEWAY_KEY:?AI_GATEWAY_KEY is required}
-    volumes:
-      - ./web/admin:/app
-      - admin_web_node_modules:/app/node_modules
-    ports: !override
-      - "5180:5180"
     depends_on:
       acoreai-gateway:
         condition: service_healthy
@@ -120,4 +91,3 @@ volumes:
   acoreai_ai_mongodb_data:
   acoreai_ai_gateway_node_modules:
   acoreai_web_node_modules:
-  admin_web_node_modules:

@@ -1,0 +1,76 @@
+server {
+    listen 8080;
+    server_name _;
+    resolver 127.0.0.11 valid=30s ipv6=off;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location /api/chat/stream {
+        proxy_pass ${AI_GATEWAY_INTERNAL_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header x-ai-gateway-key ${AI_GATEWAY_KEY};
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    location /api/translate/stream {
+        proxy_pass ${AI_GATEWAY_INTERNAL_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header x-ai-gateway-key ${AI_GATEWAY_KEY};
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+
+    location /api/chat/perspectives/stream {
+        proxy_pass ${AI_GATEWAY_INTERNAL_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header x-ai-gateway-key ${AI_GATEWAY_KEY};
+        proxy_set_header Connection "";
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 360s;
+        proxy_send_timeout 360s;
+    }
+
+    location /api/ {
+        proxy_pass ${AI_GATEWAY_INTERNAL_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header x-ai-gateway-key ${AI_GATEWAY_KEY};
+    }
+
+    location /health/ {
+        proxy_pass ${AI_GATEWAY_INTERNAL_URL};
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

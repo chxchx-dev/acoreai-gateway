@@ -208,7 +208,7 @@ services:
   # ── Plataforma ACoreAI ────────────────────────────────────────────────────────
   acoreai-web:
     build:
-      context: ./web/acoreai
+      context: ./web/app
       dockerfile: Dockerfile
     container_name: acoreai-web
     env_file:
@@ -224,7 +224,6 @@ services:
     <<: *acoreai-web-resources
     restart: unless-stopped
 
-  # acoreai-web se despliega en servidor independiente — no corre en este compose.
 
 volumes:
   acoreai_ai_postgres_data:

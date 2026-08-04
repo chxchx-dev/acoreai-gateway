@@ -77,8 +77,7 @@ src/
 └── client/            Cliente interno del gateway
 
 web/
-├── acoreai/           Cliente de referencia; se reemplaza o personaliza por producto
-└── admin/             Administración del Centro de Conocimiento
+└── app/               Aplicación unificada; usuario en `/`, administración en `/admin` y consola Admin Dev en `/admin-dev`
 
 services/
 ├── tts/               Servicio FastAPI opcional de texto a voz
@@ -136,7 +135,7 @@ La búsqueda semántica calcula similitud coseno y combina similitud, prioridad,
 ## Crear un proyecto derivado
 
 1. Crea una rama o un repositorio desde esta base; asigna un nombre propio a servicios, imágenes, volúmenes Docker y bases de datos. Nunca reutilices claves ni datos de otra instalación.
-2. Copia [`.env.example`](.env.example) como `.env` y ajusta secretos, bases de datos, URLs, modelos, administrador y `CORS_ORIGINS`. Para Vite usa también los ejemplos de `web/acoreai/` y `web/admin/`.
+2. Copia [`.env.example`](.env.example) como `.env` y ajusta secretos, bases de datos, URLs, modelos, administrador y `CORS_ORIGINS`. Para Vite usa también `web/app/.env.example`.
 3. Define antes de codificar: usuarios, áreas, roles, fuentes permitidas, flujo de aprobación, política de retención, riesgos y métricas de éxito.
 4. Personaliza marca, dominio, interfaz y prompts. Agrega las reglas específicas en `src/modules/<dominio>` sin acoplarlas a la infraestructura.
 5. Declara qué extensiones se usarán. Si no se necesitan, no las enlaces desde los clientes ni las despliegues. Eliminar una extensión existente requiere revisar migraciones, dependencias y pruebas.
@@ -156,8 +155,7 @@ La búsqueda semántica calcula similitud coseno y combina similitud, prioridad,
 ```bash
 cp .env.example .env
 pnpm install
-cd web/acoreai && npm install
-cd ../admin && npm install
+cd web/app && pnpm install
 cd ../..
 ```
 
@@ -171,8 +169,9 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 | Servicio | Dirección local |
 | --- | --- |
-| Cliente de referencia | http://localhost:5175 |
-| Panel administrativo | http://localhost:5180 |
+| Aplicación web unificada | http://localhost:5175 |
+| Centro de Conocimiento unificado | http://localhost:5175/admin |
+| Consola de desarrollo | http://localhost:5175/admin-dev |
 | Gateway | http://localhost:4005 |
 | Readiness | http://localhost:4005/health/ready |
 | Métricas | http://localhost:4005/metrics |
@@ -185,12 +184,12 @@ pnpm exec prisma migrate deploy
 pnpm start:dev
 ```
 
-Los clientes se ejecutan aparte:
+La aplicación unificada se ejecuta así:
 
 ```bash
-cd web/acoreai && npm run dev
-cd web/admin && npm run dev
+cd web/app && pnpm dev
 ```
+
 
 ### Comandos de verificación y operación
 

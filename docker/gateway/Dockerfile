@@ -40,9 +40,6 @@ RUN pnpm prisma:generate
 # Código compilado
 COPY --from=builder /app/dist ./dist
 
-# Demo HTML servido desde /demo para evitar CORS al abrirlo como file://
-COPY chat-demo.html ./public/demo/index.html
-
 # Entrypoint
 COPY docker/gateway/entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
