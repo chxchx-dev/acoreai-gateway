@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../lib/endpoints';
-import { setSession } from '../lib/auth';
+import { setSession } from '../../lib/auth';
 import { ApiError } from '../lib/api';
 import { Button } from '../components/Button';
 

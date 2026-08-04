@@ -115,6 +115,31 @@ function parseSseEvent(raw: string): { event: string; data: Record<string, unkno
   }
 }
 
+async function consumeSseStream(
+  response: Response,
+  onEvent: (event: { event: string; data: Record<string, unknown> }) => void | Promise<void>,
+): Promise<void> {
+  if (!response.body) throw new Error('La respuesta no contiene un stream SSE.');
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const events = buffer.replace(/\r\n/g, '\n').split('\n\n');
+    buffer = events.pop() ?? '';
+
+    for (const raw of events) {
+      const parsed = parseSseEvent(raw);
+      if (parsed) await onEvent(parsed);
+    }
+  }
+}
+
 const STREAM_TOKEN_DELAY_MS = 24;
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
@@ -181,43 +206,28 @@ export async function streamChat(
 
   if (!res.ok || !res.body) throw await parseError(res);
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
   let answer = '';
   let conversationId: string | undefined;
   let status: ChatStatus = 'answered';
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.replace(/\r\n/g, '\n').split('\n\n');
-    buffer = events.pop() ?? '';
-
-    for (const raw of events) {
-      const parsed = parseSseEvent(raw);
-      if (!parsed) continue;
-
-      if (parsed.event === 'token') {
-        const token = String(parsed.data.token ?? '');
-        answer += token;
-        await emitTokenWithDelay(token, onToken, signal);
-      }
-
-      if (parsed.event === 'done') {
-        const finalAnswer = String(parsed.data.answer ?? answer);
-        answer = finalAnswer;
-        conversationId = String(parsed.data.conversationId ?? parsed.data.id ?? '') || conversationId;
-        status = (parsed.data.status as ChatStatus) || status;
-      }
-
-      if (parsed.event === 'error') {
-        throw new Error(String(parsed.data.message ?? 'Error en el stream de ACoreAI'));
-      }
+  await consumeSseStream(res, async (parsed) => {
+    if (parsed.event === 'token') {
+      const token = String(parsed.data.token ?? '');
+      answer += token;
+      await emitTokenWithDelay(token, onToken, signal);
     }
-  }
+
+    if (parsed.event === 'done') {
+      const finalAnswer = String(parsed.data.answer ?? answer);
+      answer = finalAnswer;
+      conversationId = String(parsed.data.conversationId ?? parsed.data.id ?? '') || conversationId;
+      status = (parsed.data.status as ChatStatus) || status;
+    }
+
+    if (parsed.event === 'error') {
+      throw new Error(String(parsed.data.message ?? 'Error en el stream de ACoreAI'));
+    }
+  });
 
   return { answer, conversationId, status };
 }
@@ -351,51 +361,35 @@ export async function translateTextStream(
   }, authToken);
   if (!res.ok || !res.body) throw await parseError(res);
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
   const translations: Record<string, string> = {};
-  let buffer = '';
+  await consumeSseStream(res, async (parsed) => {
+    if (parsed.event === 'token') {
+      const language = String(parsed.data.lang ?? parsed.data.language ?? '');
+      const token = String(parsed.data.token ?? '');
+      if (!language || !token) return;
+      translations[language] = `${translations[language] || ''}${token}`;
+      await emitTokenWithDelay(token, (part) => onToken(language, part), signal);
+    }
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+    if (parsed.event === 'lang_done' || parsed.event === 'language_done') {
+      const language = String(parsed.data.lang ?? parsed.data.language ?? '');
+      const translation = String(parsed.data.translation ?? translations[language] ?? '');
+      if (!language) return;
+      translations[language] = translation;
+      onLanguageDone?.(language, translation);
+    }
 
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.replace(/\r\n/g, '\n').split('\n\n');
-    buffer = events.pop() ?? '';
-
-    for (const raw of events) {
-      const parsed = parseSseEvent(raw);
-      if (!parsed) continue;
-
-      if (parsed.event === 'token') {
-        const language = String(parsed.data.lang ?? parsed.data.language ?? '');
-        const token = String(parsed.data.token ?? '');
-        if (!language || !token) continue;
-        translations[language] = `${translations[language] || ''}${token}`;
-        await emitTokenWithDelay(token, (part) => onToken(language, part), signal);
-      }
-
-      if (parsed.event === 'lang_done' || parsed.event === 'language_done') {
-        const language = String(parsed.data.lang ?? parsed.data.language ?? '');
-        const translation = String(parsed.data.translation ?? translations[language] ?? '');
-        if (!language) continue;
-        translations[language] = translation;
-        onLanguageDone?.(language, translation);
-      }
-
-      if (parsed.event === 'done') {
-        const finalTranslations = parsed.data.translations;
-        if (finalTranslations && typeof finalTranslations === 'object') {
-          Object.assign(translations, finalTranslations as Record<string, string>);
-        }
-      }
-
-      if (parsed.event === 'error') {
-        throw new Error(String(parsed.data.message ?? 'Error en el stream de traduccion'));
+    if (parsed.event === 'done') {
+      const finalTranslations = parsed.data.translations;
+      if (finalTranslations && typeof finalTranslations === 'object') {
+        Object.assign(translations, finalTranslations as Record<string, string>);
       }
     }
-  }
+
+    if (parsed.event === 'error') {
+      throw new Error(String(parsed.data.message ?? 'Error en el stream de traduccion'));
+    }
+  });
 
   return translations;
 }
@@ -651,9 +645,6 @@ export async function streamPerspectives(
 
   if (!res.ok || !res.body) throw await parseError(res);
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
   let result: PerspectivesResult = {
     perspectives: [],
     sources: [],
@@ -661,53 +652,41 @@ export async function streamPerspectives(
     durationMs: 0,
   };
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.replace(/\r\n/g, '\n').split('\n\n');
-    buffer = events.pop() ?? '';
-
-    for (const raw of events) {
-      const parsed = parseSseEvent(raw);
-      if (!parsed) continue;
-
-      if (parsed.event === 'perspective_start') {
-        const idx = parsed.data.index as number;
-        callbacks.onPerspectiveStart(idx, {
-          label: String(parsed.data.label ?? ''),
-          icon: String(parsed.data.icon ?? ''),
-          color: String(parsed.data.color ?? '#00D4AA'),
-        });
-      }
-
-      if (parsed.event === 'perspective_token') {
-        const idx = parsed.data.perspectiveIndex as number;
-        const token = String(parsed.data.token ?? '');
-        if (token) await emitTokenWithDelay(token, (part) => callbacks.onPerspectiveToken(idx, part), signal);
-      }
-
-      if (parsed.event === 'perspective_done') {
-        const idx = parsed.data.index as number;
-        callbacks.onPerspectiveDone(idx, String(parsed.data.text ?? ''));
-      }
-
-      if (parsed.event === 'done') {
-        result = {
-          perspectives: (parsed.data.perspectives as PerspectiveMeta[]) ?? result.perspectives,
-          sources: (parsed.data.sources as PerspectivesResult['sources']) ?? [],
-          conversationId: String(parsed.data.conversationId ?? ''),
-          model: String(parsed.data.model ?? payload.model),
-          durationMs: Number(parsed.data.durationMs ?? 0),
-        };
-      }
-
-      if (parsed.event === 'error') {
-        throw new Error(String(parsed.data.message ?? 'Error generando perspectivas'));
-      }
+  await consumeSseStream(res, async (parsed) => {
+    if (parsed.event === 'perspective_start') {
+      const idx = parsed.data.index as number;
+      callbacks.onPerspectiveStart(idx, {
+        label: String(parsed.data.label ?? ''),
+        icon: String(parsed.data.icon ?? ''),
+        color: String(parsed.data.color ?? '#00D4AA'),
+      });
     }
-  }
+
+    if (parsed.event === 'perspective_token') {
+      const idx = parsed.data.perspectiveIndex as number;
+      const token = String(parsed.data.token ?? '');
+      if (token) await emitTokenWithDelay(token, (part) => callbacks.onPerspectiveToken(idx, part), signal);
+    }
+
+    if (parsed.event === 'perspective_done') {
+      const idx = parsed.data.index as number;
+      callbacks.onPerspectiveDone(idx, String(parsed.data.text ?? ''));
+    }
+
+    if (parsed.event === 'done') {
+      result = {
+        perspectives: (parsed.data.perspectives as PerspectiveMeta[]) ?? result.perspectives,
+        sources: (parsed.data.sources as PerspectivesResult['sources']) ?? [],
+        conversationId: String(parsed.data.conversationId ?? ''),
+        model: String(parsed.data.model ?? payload.model),
+        durationMs: Number(parsed.data.durationMs ?? 0),
+      };
+    }
+
+    if (parsed.event === 'error') {
+      throw new Error(String(parsed.data.message ?? 'Error generando perspectivas'));
+    }
+  });
 
   return result;
 }
@@ -888,24 +867,11 @@ export async function generateDailySuggestion(
 
   if (!res.ok || !res.body) return null;
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
   let answer = '';
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const events = buffer.replace(/\r\n/g, '\n').split('\n\n');
-    buffer = events.pop() ?? '';
-    for (const raw of events) {
-      const parsed = parseSseEvent(raw);
-      if (!parsed) continue;
-      if (parsed.event === 'token') answer += String(parsed.data.token ?? '');
-      if (parsed.event === 'done') answer = String(parsed.data.answer ?? answer);
-    }
-  }
+  await consumeSseStream(res, (parsed) => {
+    if (parsed.event === 'token') answer += String(parsed.data.token ?? '');
+    if (parsed.event === 'done') answer = String(parsed.data.answer ?? answer);
+  });
 
   try {
     const jsonMatch = answer.match(/\{[\s\S]*\}/);

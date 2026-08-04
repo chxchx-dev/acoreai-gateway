@@ -13,7 +13,7 @@ import {
   clearSession,
   getEffectiveKnowledgeRole,
   getStoredUser,
-} from "../lib/auth";
+} from "../../lib/auth";
 import { can, canAutomation, roleLabel } from "../lib/permissions";
 
 function linkClass(isActive: boolean) {

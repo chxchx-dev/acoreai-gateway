@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { translateTextStream } from '../lib/gateway';
 import { api } from '../admin/lib/api';
-import { clearSession, getStoredUser, getToken } from '../admin/lib/auth';
+import { clearSession, getStoredUser, getToken } from '../lib/auth';
 
 const API_BASE = import.meta.env.DEV ? '/ai/api' : '/api';
 const DEFAULT_MODEL = 'llama3.2:3b';

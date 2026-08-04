@@ -1,4 +1,4 @@
-import { getEffectiveKnowledgeRole, getStoredUser } from './auth';
+import { getEffectiveKnowledgeRole, getStoredUser } from '../../lib/auth';
 
 // Espejo de src/domain/knowledge/knowledge-permissions.ts del backend.
 // Solo controla qué se muestra en la UI; el backend es quien de verdad

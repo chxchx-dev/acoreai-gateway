@@ -1,4 +1,4 @@
-import { clearSession, getToken } from './auth';
+import { clearSession, getToken } from '../../lib/auth';
 
 // Vite proxies /ai during development; the production nginx serves the
 // gateway under /api alongside the user application.

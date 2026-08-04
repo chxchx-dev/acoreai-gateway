@@ -20,7 +20,7 @@ import type {
   TranslationCacheEntry,
   TranslationCacheLanguageStats,
 } from './types';
-import type { StoredUser } from './auth';
+import type { StoredUser } from '../../lib/auth';
 
 export interface LoginResponse {
   accessToken: string;

@@ -60,21 +60,7 @@ export class OllamaService {
     let metadata: OllamaApiChatResponse | undefined;
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...params,
-          options: this.buildOptions(params.options),
-          stream: false,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Ollama respondió con status ${response.status}: ${text}`);
-      }
+      const response = await this.requestChat(params, false, controller.signal);
 
       const data = (await response.json()) as OllamaApiChatResponse;
       status = 'ok';
@@ -110,21 +96,7 @@ export class OllamaService {
     let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...params,
-          options: this.buildOptions(params.options),
-          stream: true,
-        }),
-        signal,
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Ollama respondió con status ${response.status}: ${text}`);
-      }
+      const response = await this.requestChat(params, true, signal);
 
       if (!response.body) {
         throw new Error('Ollama no devolvió stream');
@@ -328,6 +300,30 @@ export class OllamaService {
     }
 
     return { ...options, num_thread: this.numThread };
+  }
+
+  private async requestChat(
+    params: OllamaChatParams,
+    stream: boolean,
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...params,
+        options: this.buildOptions(params.options),
+        stream,
+      }),
+      signal,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Ollama respondió con status ${response.status}: ${text}`);
+    }
+
+    return response;
   }
 
   private getModelCandidates(modelName: string): string[] {

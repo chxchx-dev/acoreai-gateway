@@ -22,7 +22,7 @@ import { AutomationTemplatesTab } from './pages/AutomationTemplatesTab';
 import { AutomationChecklistTab } from './pages/AutomationChecklistTab';
 import { AutomationLogsTab } from './pages/AutomationLogsTab';
 import { TranslationCachePage } from './pages/TranslationCachePage';
-import { getEffectiveKnowledgeRole, getStoredUser, getToken } from './lib/auth';
+import { getEffectiveKnowledgeRole, getStoredUser, getToken } from '../lib/auth';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },

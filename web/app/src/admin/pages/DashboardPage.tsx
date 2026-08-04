@@ -7,7 +7,7 @@ import { StatusBadge } from '../components/StatusBadge';
 import { Button } from '../components/Button';
 import { can } from '../lib/permissions';
 import { formatDateOnly } from '../lib/date';
-import { getStoredUser } from '../lib/auth';
+import { getStoredUser } from '../../lib/auth';
 import { HistoryExportPanel } from '../components/HistoryExportPanel';
 import { InfoHint } from '../components/InfoHint';
 
