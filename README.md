@@ -127,7 +127,7 @@ La búsqueda semántica calcula similitud coseno y combina similitud, prioridad,
 | IA | Ollama |
 | Datos | PostgreSQL, Prisma, pgvector, MongoDB |
 | Seguridad | JWT, Argon2, Helmet, throttling |
-| Clientes | React, Vite, TypeScript, TailwindCSS (admin) |
+| Clientes | React, Vite, TypeScript, TailwindCSS en la aplicación unificada |
 | Voz | FastAPI, edge-tts, faster-whisper |
 | Observabilidad | Pino, Prometheus, prom-client |
 | Infraestructura | Docker Compose, Nginx |
@@ -176,6 +176,8 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 | Readiness | http://localhost:4005/health/ready |
 | Métricas | http://localhost:4005/metrics |
 
+`/admin` concentra la administración del Centro de Conocimiento y `/admin-dev` ofrece las pruebas internas del gateway (modelos, salud, chat, RAG, streaming, traducción y TTS). `Admin Dev` requiere una sesión de usuario con rol `ADMIN` y usa JWT; no necesita exponer `AI_GATEWAY_KEY` en el frontend.
+
 ### Desarrollo sin Docker completo
 
 ```bash
@@ -184,7 +186,7 @@ pnpm exec prisma migrate deploy
 pnpm start:dev
 ```
 
-La aplicación unificada se ejecuta así:
+La aplicación unificada, incluyendo `/admin` y `/admin-dev`, se ejecuta así:
 
 ```bash
 cd web/app && pnpm dev
