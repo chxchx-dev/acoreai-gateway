@@ -3,8 +3,6 @@ dist/
 .env
 *.env.local
 .pnpm-store/
-.venv-kokoro/
-salida_*.wav
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
