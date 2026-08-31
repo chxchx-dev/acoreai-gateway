@@ -21,6 +21,7 @@
     "test:all:docker": "node scripts/run-e2e-demo.cjs --docker --all",
     "verify:docker": "node scripts/run-quality-docker.cjs",
     "test:watch": "jest --watch",
+    "doctor": "bash docs/ai/scripts/doctor.sh",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
