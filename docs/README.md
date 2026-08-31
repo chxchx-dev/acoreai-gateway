@@ -19,9 +19,3 @@ efectiva cuando contradicen una descripción.
 - [Workflows](ai/workflows/): procedimiento por tipo de cambio.
 - [Roles](ai/agents/): alcance y permisos de cada rol.
 - [Doctor](ai/scripts/doctor.sh): diagnóstico de estructura y referencias retiradas.
-
-## Referencia de adopción
-
-`AGENT-GOVERNANCE-PLAYBOOK.md` es el material de referencia usado para esta
-adopción. No gobierna el producto por encima de los documentos canónicos de
-este índice.

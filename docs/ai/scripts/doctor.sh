@@ -57,7 +57,7 @@ if find "$ROOT_DIR" -type f \( -name '.env.example' -o -name '*.env.example' \) 
   failures=$((failures + 1))
 fi
 
-if rg -n --glob '*.md' --glob '!AGENT-GOVERNANCE-PLAYBOOK.md' '\.env([./`]|$)|env\.example' "$ROOT_DIR"; then
+if rg -n --glob '*.md' '\.env([./`]|$)|env\.example' "$ROOT_DIR"; then
   echo "FALTA: la documentación activa contiene referencias a archivos de configuración local"
   failures=$((failures + 1))
 fi
