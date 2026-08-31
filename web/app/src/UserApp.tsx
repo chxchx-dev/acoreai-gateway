@@ -1031,7 +1031,7 @@ export function UserApp() {
       const errorMessage =
         error instanceof Error && error.message.trim()
           ? error.message
-          : "No pude conectar con acoreai-gateway. Revisa el .env, el proxy de Vite o que el gateway este activo.";
+          : "No pude conectar con acoreai-gateway. Revisa la configuración de ejecución, el proxy de Vite o que el gateway este activo.";
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === assistantId

@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 
 const rootDir = path.resolve(__dirname, '..');
 process.chdir(rootDir);
-dotenv.config({ path: path.join(rootDir, '.env'), quiet: true });
+dotenv.config({ quiet: true });
 
 const pnpmCommand = 'pnpm';
 const runningInDocker = process.argv.includes('--docker') || process.env.E2E_DOCKER === 'true';
@@ -52,7 +52,7 @@ function waitForService(label, args, timeoutMs = 90000) {
 
 function testDatabaseUrl() {
   if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL must be configured in .env');
+    throw new Error('DATABASE_URL must be provided by the runtime environment');
   }
 
   const url = new URL(process.env.DATABASE_URL);
@@ -64,7 +64,7 @@ function testDatabaseUrl() {
 
 function testMongoUrl() {
   if (!process.env.MONGODB_URI) {
-    throw new Error('MONGODB_URI must be configured in .env');
+    throw new Error('MONGODB_URI must be provided by the runtime environment');
   }
 
   const url = new URL(process.env.MONGODB_URI);

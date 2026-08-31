@@ -1,10 +1,9 @@
 import { config as loadEnv } from 'dotenv';
-import { resolve } from 'path';
 
-// Reusa las credenciales reales de .env (ya está en .gitignore) pero apunta
-// Postgres/Mongo a la instancia expuesta por docker-compose.dev.yml en el
-// host y a bases de datos separadas, para no tocar datos de desarrollo/prod.
-loadEnv({ path: resolve(__dirname, '../.env') });
+// Reusa la configuración entregada al proceso, pero apunta Postgres/Mongo a
+// la instancia expuesta por docker-compose.dev.yml en el host y a bases de
+// datos separadas, para no tocar datos de desarrollo/prod.
+loadEnv({ quiet: true });
 
 process.env.NODE_ENV = 'test';
 const runningInDocker = process.env.E2E_DOCKER === 'true';

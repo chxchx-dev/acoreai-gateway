@@ -1,6 +1,6 @@
 __pycache__
 *.pyc
-.env
+.env*
 *.log
 .pytest_cache
 .mypy_cache
