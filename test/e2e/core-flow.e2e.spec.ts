@@ -118,6 +118,21 @@ describe('Core HTTP E2E demo', () => {
     expect(chatBody.conversationId).toEqual(expect.any(String));
     conversationId = chatBody.conversationId;
 
+    const ragChat = await requestJson(baseUrl, '/api/chat/rag', {
+      method: 'POST',
+      token: tokens.accessToken,
+      body: {
+        message: 'Pregunta sin conocimiento publicado',
+        model: 'llama3.2:1b',
+        sessionId: conversationId,
+      },
+    });
+    expect(ragChat.status).toBe(201);
+    expect((ragChat.body as { status: string }).status).toBe('no_context');
+    expect((ragChat.body as { usedKnowledge: boolean }).usedKnowledge).toBe(false);
+    expect((ragChat.body as { conversationId: string }).conversationId).toBe(conversationId);
+    expect((ragChat.body as { sources: unknown[] }).sources).toEqual([]);
+
     const messages = await requestJson(
       baseUrl,
       `/api/conversations/${conversationId}/messages`,

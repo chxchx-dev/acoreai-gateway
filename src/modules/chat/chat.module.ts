@@ -9,6 +9,7 @@ import { ConversationsModule } from 'src/modules/conversations/conversations.mod
 import { LogsModule } from 'src/modules/logs/logs.module';
 import { RagModule } from 'src/modules/rag/rag.module';
 import { ChatController } from 'src/interfaces/http/controllers/chat.controller';
+import { ChatRagController } from 'src/interfaces/http/controllers/chat-rag.controller';
 import { ChatService } from 'src/application/services/chat/chat.service';
 import { IntentClassifierService } from 'src/application/services/chat/intent-classifier.service';
 
@@ -21,7 +22,7 @@ import { IntentClassifierService } from 'src/application/services/chat/intent-cl
     AuthModule,
     LogsModule,
   ],
-  controllers: [ChatController],
+  controllers: [ChatController, ChatRagController],
   providers: [ChatService, IntentClassifierService, AskQuestionUseCase, StreamChatUseCase, StreamPerspectivesUseCase],
   exports: [ChatService],
 })

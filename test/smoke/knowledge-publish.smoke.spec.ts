@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from 'src/infrastructure/database/prisma/prisma.service';
 import { KnowledgePublishingService } from 'src/modules/knowledge/knowledge-publishing.service';
 import { KnowledgeSearchService } from 'src/modules/knowledge/retrieval/knowledge-search.service';
+import { RagService } from 'src/modules/rag/rag.service';
 import { createTestApp } from './test-app';
 
 const FIXED_EMBEDDING = new Array(768).fill(0.01);
@@ -16,20 +17,62 @@ async function setEmbedding(prisma: PrismaService, chunkId: string): Promise<voi
   `;
 }
 
+async function createPublishedFixture(
+  prisma: PrismaService,
+  data: {
+    title: string;
+    area: string;
+    language?: string;
+    status?: 'published' | 'archived';
+    validUntil?: Date;
+  },
+): Promise<string> {
+  const source = await prisma.knowledgeSource.create({
+    data: {
+      title: data.title,
+      sourceType: 'text',
+      area: data.area,
+      language: data.language ?? 'es',
+      status: data.status ?? 'published',
+      validFrom: new Date('2020-01-01'),
+      validUntil: data.validUntil,
+    },
+  });
+  const version = await prisma.knowledgeSourceVersion.create({
+    data: { sourceId: source.id, version: 1, title: source.title, status: 'published' },
+  });
+  const chunk = await prisma.knowledgeChunk.create({
+    data: {
+      sourceId: source.id,
+      versionId: version.id,
+      chunkIndex: 0,
+      content: `Contenido fixture de ${data.title}.`,
+      status: 'published',
+    },
+  });
+  await setEmbedding(prisma, chunk.id);
+  return source.id;
+}
+
 describe('Knowledge publish smoke (contrato published-only)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let publishingService: KnowledgePublishingService;
   let searchService: KnowledgeSearchService;
+  let legacyRagService: RagService;
 
   let publishedSourceId: string;
   let draftSourceId: string;
+  let expiredSourceId: string;
+  let archivedSourceId: string;
+  let restrictedSourceId: string;
 
   beforeAll(async () => {
     app = await createTestApp();
     prisma = app.get(PrismaService);
     publishingService = app.get(KnowledgePublishingService);
     searchService = app.get(KnowledgeSearchService);
+    legacyRagService = app.get(RagService);
 
     // Fuente que se va a publicar: draft -> ready_to_publish con todos los
     // prerequisitos que exige KnowledgePublishingService.publish().
@@ -95,10 +138,26 @@ describe('Knowledge publish smoke (contrato published-only)', () => {
       },
     });
     await setEmbedding(prisma, draftChunk.id);
+
+    expiredSourceId = await createPublishedFixture(prisma, {
+      title: 'Smoke test source (expired)',
+      area: 'smoke-test-area',
+      validUntil: new Date('2020-01-01'),
+    });
+    archivedSourceId = await createPublishedFixture(prisma, {
+      title: 'Smoke test source (archived)',
+      area: 'smoke-test-area',
+      status: 'archived',
+    });
+    restrictedSourceId = await createPublishedFixture(prisma, {
+      title: 'Smoke test source (restricted filter)',
+      area: 'other-area',
+      language: 'en',
+    });
   });
 
   afterAll(async () => {
-    for (const sourceId of [publishedSourceId, draftSourceId]) {
+    for (const sourceId of [publishedSourceId, draftSourceId, expiredSourceId, archivedSourceId, restrictedSourceId]) {
       if (!sourceId) continue;
       await prisma.knowledgeReview.deleteMany({ where: { sourceId } });
       await prisma.knowledgeChunk.deleteMany({ where: { sourceId } });
@@ -123,5 +182,27 @@ describe('Knowledge publish smoke (contrato published-only)', () => {
     const sourceIds = results.map((r) => r.sourceId);
     expect(sourceIds).toContain(publishedSourceId);
     expect(sourceIds).not.toContain(draftSourceId);
+  });
+
+  it('excludes expired, archived, and out-of-filter sources', async () => {
+    const results = await searchService.search({
+      query: 'contenido fixture',
+      area: 'smoke-test-area',
+      language: 'es',
+    });
+    const sourceIds = results.map((r) => r.sourceId);
+
+    expect(sourceIds).not.toContain(expiredSourceId);
+    expect(sourceIds).not.toContain(archivedSourceId);
+    expect(sourceIds).not.toContain(restrictedSourceId);
+  });
+
+  it('keeps the legacy RAG adapter on the supervised published-only search', async () => {
+    const results = await legacyRagService.searchContext('contenido fixture', 'smoke-test-user');
+    const sourceIds = results.chunks.map((chunk) => chunk.documentId);
+
+    expect(sourceIds).not.toContain(expiredSourceId);
+    expect(sourceIds).not.toContain(archivedSourceId);
+    expect(sourceIds).not.toContain(restrictedSourceId);
   });
 });

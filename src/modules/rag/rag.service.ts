@@ -1,11 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrator.service';
-import {
-  VECTOR_STORE_PORT,
-  VectorStorePort,
-} from 'src/application/ports/vector-store.port';
-import { ObservabilityService } from 'src/infrastructure/observability/observability.service';
+import { KnowledgeSearchService } from 'src/modules/knowledge/retrieval/knowledge-search.service';
 
 export interface RagChunk {
   documentId: string;
@@ -15,6 +10,8 @@ export interface RagChunk {
   chunkIndex: number;
   content: string;
   score: number;
+  page: number | null;
+  section: string | null;
 }
 
 export interface RagContextResult {
@@ -22,57 +19,41 @@ export interface RagContextResult {
   contextText: string;
 }
 
-const MIN_SIMILARITY_SCORE = 0.3;
-
 @Injectable()
 export class RagService {
-  private readonly logger = new Logger(RagService.name);
   private readonly maxContextChunks: number;
-  private readonly embeddingModel: string;
 
   constructor(
-    @Inject(VECTOR_STORE_PORT)
-    private readonly vectorStore: VectorStorePort,
-    private readonly aiOrchestrator: AiOrchestratorService,
+    private readonly knowledgeSearch: KnowledgeSearchService,
     private readonly config: ConfigService,
-    private readonly observability: ObservabilityService,
   ) {
     this.maxContextChunks = this.config.get<number>('MAX_CONTEXT_CHUNKS', 5);
-    this.embeddingModel = this.config.get<string>(
-      'OLLAMA_EMBEDDING_MODEL',
-      'embeddinggemma',
-    );
   }
 
-  async searchContext(question: string): Promise<RagContextResult> {
-    const questionEmbeddings = await this.observability.measureStage(
-      'rag.embedding',
-      () => this.aiOrchestrator.createEmbedding(question),
-    );
-    const qVec = questionEmbeddings[0];
-
-    if (!qVec || qVec.length === 0) {
-      this.logger.warn('El modelo de embeddings devolvió un vector vacío');
-      return { chunks: [], contextText: '' };
-    }
-
-    const scored = await this.observability.measureStage('rag.vector_search', () =>
-      this.vectorStore.searchSimilarChunks({
-        embedding: qVec,
-        model: this.embeddingModel,
-        limit: this.maxContextChunks,
-        minScore: MIN_SIMILARITY_SCORE,
-      }),
-    );
+  async searchContext(
+    question: string,
+    userId?: string,
+    area?: string,
+    language?: string,
+  ): Promise<RagContextResult> {
+    const scored = await this.knowledgeSearch.search({
+      query: question,
+      topK: this.maxContextChunks,
+      userId,
+      area,
+      language,
+    });
 
     const chunks: RagChunk[] = scored.map((c) => ({
-      documentId: c.documentId,
-      title: c.docTitle,
-      sourceUrl: c.docSource,
-      chunkId: c.id,
+      documentId: c.sourceId,
+      title: c.title,
+      sourceUrl: c.sourceUrl ?? undefined,
+      chunkId: c.chunkId,
       chunkIndex: c.chunkIndex,
       content: c.content,
-      score: c.score ?? 0,
+      score: c.similarity,
+      page: c.pageStart,
+      section: c.sectionTitle,
     }));
     const contextText = chunks.map((c) => c.content).join('\n\n');
     return { chunks, contextText };

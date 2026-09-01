@@ -40,6 +40,9 @@ import { createThinkingStreamFilter, stripThinking } from './utils/strip-thinkin
 
 type FlushableResponse = Response & { flush?: () => void };
 
+const NO_CONTEXT_ANSWER =
+  'No tengo información suficiente en la base de conocimiento aprobada para responder eso.';
+
 interface ChatConversationContext {
   conversationId: string;
   userMessageId: string;
@@ -143,21 +146,13 @@ export class ChatService {
     }
 
     if (prepared.status === 'no_context') {
-      const chatResponse: ChatResponse = {
-        answer: prepared.answer ?? null,
+      const chatResponse = await this.buildNoContextResponse(
+        dto,
+        start,
         model,
-        durationMs: Date.now() - start,
-        status: 'no_context',
-        sources: [],
-        conversationId: conversation.conversationId,
-        historyUsed: conversation.historyUsed,
-      };
-      chatResponse.messageId = await this.saveAssistantMessage(
-        conversation.conversationId,
-        chatResponse,
-        'no_context',
+        conversation,
+        prepared.answer,
       );
-      await this.createChatLog(dto, chatResponse, 0);
 
       this.writeStreamEvent(response, 'done', chatResponse);
       response.end();
@@ -308,7 +303,12 @@ export class ChatService {
     let ragContextText = '';
     if (await this.resolveUseRag(dto)) {
       try {
-        const ragResult = await this.ragService.searchContext(dto.question);
+        const ragResult = await this.ragService.searchContext(
+          dto.question,
+          dto.userId,
+          dto.area,
+          dto.language,
+        );
         sources = ragResult.chunks.map((c) => ({
           documentId: c.documentId,
           chunkId: c.chunkId,
@@ -316,6 +316,8 @@ export class ChatService {
           chunkIndex: c.chunkIndex,
           score: Math.round(c.score * 1000) / 1000,
           sourceUrl: c.sourceUrl,
+          page: c.page,
+          section: c.section,
         }));
         ragContextText = ragResult.contextText;
       } catch {
@@ -570,11 +572,19 @@ export class ChatService {
     let ragResult: RagContextResult;
 
     try {
-      ragResult = await this.ragService.searchContext(dto.question);
+      ragResult = await this.ragService.searchContext(
+        dto.question,
+        dto.userId,
+        dto.area,
+        dto.language,
+      );
     } catch (err: unknown) {
       this.logger.warn(
         `RAG search falló, respondiendo con el modelo general: ${err instanceof Error ? err.message : String(err)}`,
       );
+      if (dto.requireKnowledge) {
+        return this.buildErrorResponse(dto, err, start, model, conversation);
+      }
       return this.askDirect(dto, start, model, conversation);
     }
 
@@ -582,6 +592,9 @@ export class ChatService {
       this.logger.debug(
         'RAG sin resultados en la base de conocimiento, respondiendo con el modelo general',
       );
+      if (dto.requireKnowledge) {
+        return this.buildNoContextResponse(dto, start, model, conversation);
+      }
       return this.askDirect(dto, start, model, conversation);
     }
 
@@ -618,6 +631,8 @@ export class ChatService {
         chunkIndex: c.chunkIndex,
         score: Math.round(c.score * 1000) / 1000,
         sourceUrl: c.sourceUrl,
+        page: c.page,
+        section: c.section,
       }));
 
       const response: ChatResponse = {
@@ -781,11 +796,17 @@ export class ChatService {
 
     let ragResult: RagContextResult;
     try {
-      ragResult = await this.ragService.searchContext(dto.question);
+      ragResult = await this.ragService.searchContext(
+        dto.question,
+        dto.userId,
+        dto.area,
+        dto.language,
+      );
     } catch (err: unknown) {
       this.logger.warn(
         `RAG search falló, respondiendo con el modelo general: ${err instanceof Error ? err.message : String(err)}`,
       );
+      if (dto.requireKnowledge) throw err;
       return generalPrompt();
     }
 
@@ -793,6 +814,9 @@ export class ChatService {
       this.logger.debug(
         'RAG sin resultados en la base de conocimiento, respondiendo con el modelo general',
       );
+      if (dto.requireKnowledge) {
+        return { status: 'no_context', systemPrompt: '', answer: NO_CONTEXT_ANSWER };
+      }
       return generalPrompt();
     }
 
@@ -807,6 +831,8 @@ export class ChatService {
       chunkIndex: c.chunkIndex,
       score: Math.round(c.score * 1000) / 1000,
       sourceUrl: c.sourceUrl,
+      page: c.page,
+      section: c.section,
     }));
 
     return {
@@ -820,6 +846,34 @@ export class ChatService {
       sources,
       chunksUsed: ragResult.chunks.length,
     };
+  }
+
+  private async buildNoContextResponse(
+    dto: ChatRequest,
+    start: number,
+    model: string,
+    conversation: ChatConversationContext,
+    answer = NO_CONTEXT_ANSWER,
+  ): Promise<ChatResponse> {
+    const response: ChatResponse = {
+      answer,
+      model,
+      durationMs: Date.now() - start,
+      status: 'no_context',
+      sources: [],
+      conversationId: conversation.conversationId,
+      historyUsed: conversation.historyUsed,
+    };
+
+    response.messageId = await this.saveAssistantMessage(
+      conversation.conversationId,
+      response,
+      'no_context',
+    );
+    await this.createChatLog(dto, response, 0);
+    this.queueConversationSummary(conversation.conversationId, model, dto.mode, dto.practiceLanguage);
+
+    return response;
   }
 
   private queueConversationSummary(

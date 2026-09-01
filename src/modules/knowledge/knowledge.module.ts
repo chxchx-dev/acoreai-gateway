@@ -6,7 +6,6 @@ import { KnowledgeSourcesController } from 'src/interfaces/http/controllers/know
 import { KnowledgeSourceConversionController } from 'src/interfaces/http/controllers/knowledge-source-conversion.controller';
 import { KnowledgeChunksController } from 'src/interfaces/http/controllers/knowledge-chunks.controller';
 import { KnowledgeSearchController } from 'src/interfaces/http/controllers/knowledge-search.controller';
-import { ChatRagController } from 'src/interfaces/http/controllers/chat-rag.controller';
 import { KnowledgeAuditController } from 'src/interfaces/http/controllers/knowledge-audit.controller';
 import { KnowledgeTestController } from 'src/interfaces/http/controllers/knowledge-test.controller';
 import { KnowledgeUnansweredController } from 'src/interfaces/http/controllers/knowledge-unanswered.controller';
@@ -19,7 +18,6 @@ import { KnowledgeReviewService } from './knowledge-review.service';
 import { KnowledgePublishingService } from './knowledge-publishing.service';
 import { KnowledgeEmbeddingsService } from './embeddings/knowledge-embeddings.service';
 import { KnowledgeSearchService } from './retrieval/knowledge-search.service';
-import { KnowledgeChatService } from './retrieval/knowledge-chat.service';
 import { KnowledgeTestService } from './retrieval/knowledge-test.service';
 import { KnowledgeDashboardService } from './knowledge-dashboard.service';
 import { KnowledgeWatcherService } from './watchers/knowledge-watcher.service';
@@ -50,7 +48,6 @@ import { KNOWLEDGE_WATCHER_REPOSITORY_PORT } from 'src/application/ports/knowled
     KnowledgeSourceConversionController,
     KnowledgeChunksController,
     KnowledgeSearchController,
-    ChatRagController,
     KnowledgeAuditController,
     KnowledgeTestController,
     KnowledgeUnansweredController,
@@ -65,7 +62,6 @@ import { KNOWLEDGE_WATCHER_REPOSITORY_PORT } from 'src/application/ports/knowled
     KnowledgePublishingService,
     KnowledgeEmbeddingsService,
     KnowledgeSearchService,
-    KnowledgeChatService,
     KnowledgeTestService,
     KnowledgeDashboardService,
     KnowledgeWatcherService,
@@ -96,7 +92,6 @@ import { KNOWLEDGE_WATCHER_REPOSITORY_PORT } from 'src/application/ports/knowled
     KnowledgePublishingService,
     KnowledgeEmbeddingsService,
     KnowledgeSearchService,
-    KnowledgeChatService,
     KnowledgeTestService,
     KnowledgeDashboardService,
     KnowledgeWatcherService,

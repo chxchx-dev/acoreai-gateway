@@ -15,7 +15,10 @@ export interface ChatRequest {
   userId?: string;
   conversationId?: string;
   source?: string;
+  area?: string;
+  language?: string;
   useRag?: boolean;
+  requireKnowledge?: boolean;
   useHistory?: boolean;
   historyLimit?: number;
   model?: string;
@@ -34,6 +37,8 @@ export interface ChatSource {
   chunkIndex: number;
   score?: number;
   sourceUrl?: string;
+  page?: number | null;
+  section?: string | null;
 }
 
 export interface ChatResponse {

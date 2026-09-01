@@ -230,13 +230,7 @@ frontend ni aparecer en logs, pruebas o documentación.
 
 ## Siguientes planes
 
-El trabajo se continuará en este orden:
-
-1. Unificar los pipelines de chat.
-2. Auditar permisos y filtros en todas las rutas RAG.
-3. Aumentar las pruebas de autenticación, publicación y recuperación.
-4. Añadir colas, reintentos y circuit breakers para dependencias externas.
-5. Crear evaluaciones reales de precisión, groundedness y alucinaciones.
-
-Cada plan debe tener alcance claro, pruebas, evidencia y actualización de la
-documentación correspondiente.
+El trabajo futuro, su estado real, las dependencias y los criterios de
+aceptación viven en el [backlog priorizado](docs/BACKLOG.md). `BL-01` ya tiene
+mitigación parcial aplicada; el bloque activo es `BL-02`, que termina de
+unificar los pipelines de chat y su streaming.

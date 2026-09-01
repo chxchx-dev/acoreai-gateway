@@ -903,7 +903,16 @@ export function UserApp() {
       };
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
       try {
-        const result = await askRag({ message: question, model: currentMode.model, authToken: user.token });
+        const result = await askRag({
+          message: question,
+          model: currentMode.model,
+          conversationId: conversationId ?? undefined,
+          authToken: user.token,
+        });
+        if (result.conversationId) {
+          setConversationId(result.conversationId ?? null);
+          await refreshConversations();
+        }
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantId

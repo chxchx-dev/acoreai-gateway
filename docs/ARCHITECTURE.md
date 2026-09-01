@@ -37,3 +37,24 @@ cliente → autenticación → validación → política de modelo → historial
 
 El despliegue de referencia usa Docker Compose y Nginx. Los servicios
 opcionales sólo se conectan cuando el producto los necesita.
+
+## Recuperación RAG canónica
+
+Toda recuperación normal debe pasar por `KnowledgeSearchService`. La consulta
+exige un chunk, una versión y una fuente en estado publicado, con fechas de
+vigencia válidas; área e idioma se aplican como filtros cuando vienen en el
+contrato. `RagService` se conserva como adapter de compatibilidad y delega en
+este servicio, por lo que no consulta directamente el almacén heredado.
+
+`KnowledgeTestService` es una excepción controlada para que un supervisor
+valide una fuente concreta antes de publicar. No alimenta el chat normal ni la
+búsqueda de usuarios finales.
+
+## Pipeline de chat común
+
+`/api/chat`, `/api/chat/stream`, `/api/chat/perspectives/stream` y
+`/api/chat/rag` pasan por `ChatService`. El último activa `requireKnowledge`:
+  si no hay contexto publicado responde `no_context`, persiste el resultado y
+  no cae al modelo general. `sessionId` de esa ruta se reutiliza como
+  `conversationId`, de modo que historial, títulos, resúmenes y mensajes viven
+  en la misma conversación.

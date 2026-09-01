@@ -6,7 +6,9 @@ import { AiOrchestratorService } from 'src/modules/ai-orchestrator/ai-orchestrat
 export interface KnowledgeSearchResult {
   chunkId: string;
   sourceId: string;
+  chunkIndex: number;
   title: string;
+  sourceUrl: string | null;
   sectionTitle: string | null;
   pageStart: number | null;
   pageEnd: number | null;
@@ -19,11 +21,13 @@ export interface KnowledgeSearchResult {
 interface RawSearchRow {
   chunkId: string;
   sourceId: string;
+  chunkIndex: number;
   content: string;
   sectionTitle: string | null;
   pageStart: number | null;
   pageEnd: number | null;
   title: string;
+  sourceUrl: string | null;
   area: string | null;
   priority: number;
   publishedAt: Date | null;
@@ -72,18 +76,23 @@ export class KnowledgeSearchService {
       SELECT
         c."id" AS "chunkId",
         c."sourceId" AS "sourceId",
+        c."chunkIndex" AS "chunkIndex",
         c."content" AS "content",
         c."sectionTitle" AS "sectionTitle",
         c."pageStart" AS "pageStart",
         c."pageEnd" AS "pageEnd",
         s."title" AS "title",
+        s."fileUrl" AS "sourceUrl",
         s."area" AS "area",
         s."priority" AS "priority",
         s."publishedAt" AS "publishedAt",
         1 - (c."embedding" <=> ${vectorLiteral}::vector) AS "similarity"
       FROM "KnowledgeChunk" c
       INNER JOIN "KnowledgeSource" s ON s."id" = c."sourceId"
+      INNER JOIN "KnowledgeSourceVersion" v ON v."id" = c."versionId"
       WHERE c."status" = 'published'
+        AND s."status" = 'published'
+        AND v."status" = 'published'
         AND c."embedding" IS NOT NULL
         AND (c."validFrom" IS NULL OR c."validFrom" <= CURRENT_DATE)
         AND (c."validUntil" IS NULL OR c."validUntil" >= CURRENT_DATE)
@@ -137,7 +146,9 @@ export class KnowledgeSearchService {
     return {
       chunkId: row.chunkId,
       sourceId: row.sourceId,
+      chunkIndex: row.chunkIndex,
       title: row.title,
+      sourceUrl: row.sourceUrl,
       sectionTitle: row.sectionTitle,
       pageStart: row.pageStart,
       pageEnd: row.pageEnd,

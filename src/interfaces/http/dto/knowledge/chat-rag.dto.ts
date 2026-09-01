@@ -18,6 +18,7 @@ export class ChatRagDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   sessionId?: string;
 
   @IsOptional()

@@ -214,6 +214,7 @@ export type RagChatRequest = {
   area?: string;
   language?: string;
   model?: string;
+  conversationId?: string;
   authToken?: string;
 };
 
@@ -223,6 +224,7 @@ export type RagChatResult = {
   answer: string;
   sources: RagSource[];
   usedKnowledge: boolean;
+  conversationId?: string;
 };
 
 // Chat contra el Centro de Conocimiento (RAG supervisado): solo responde con
@@ -237,6 +239,7 @@ export async function askRag(payload: RagChatRequest): Promise<RagChatResult> {
       area: payload.area || undefined,
       language: payload.language || undefined,
       model: payload.model || undefined,
+      sessionId: payload.conversationId || undefined,
     }),
   }, payload.authToken);
 

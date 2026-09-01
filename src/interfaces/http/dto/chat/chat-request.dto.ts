@@ -81,6 +81,16 @@ export class ChatRequestDto {
   @MaxLength(100)
   source?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  area?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  language?: string;
+
   // Forzar true/false anula la clasificación automática (override manual/debug).
   // Si se omite, ChatService.resolveUseRag() decide con IntentClassifierService
   // según la pregunta, en vez de depender de que el cliente lo adivine.
