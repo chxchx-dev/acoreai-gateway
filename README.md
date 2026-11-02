@@ -1,236 +1,212 @@
-# ACoreAI Gateway
+<div align="center">
+  <pre role="img" aria-label="ACoreAI Gateway">
+█████╗  ██████╗ ██████╗ ██████╗ ███████╗ █████╗ ██╗       ██████╗  █████╗ ████████╗███████╗██╗    ██╗ █████╗ ██╗   ██╗
+██╔══██╗██╔════╝██╔═══██╗██╔══██╗██╔════╝██╔══██╗██║      ██╔════╝ ██╔══██╗╚══██╔══╝██╔════╝██║    ██║██╔══██╗╚██╗ ██╔╝
+███████║██║     ██║   ██║██████╔╝█████╗  ███████║██║█████╗██║  ███╗███████║   ██║   █████╗  ██║ █╗ ██║███████║ ╚████╔╝
+██╔══██║██║     ██║   ██║██╔══██╗██╔══╝  ██╔══██║██║╚════╝██║   ██║██╔══██║   ██║   ██╔══╝  ██║███╗██║██╔══██║  ╚██╔╝
+██║  ██║╚██████╗╚██████╔╝██║  ██║███████╗██║  ██║██║      ╚██████╔╝██║  ██║   ██║   ███████╗╚███╔███╔╝██║  ██║   ██║
+╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝       ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚══╝╚══╝ ╚═╝  ╚═╝   ╚═╝
+  </pre>
+  <p><strong>Asistentes de IA conectados a conocimiento privado, revisado y trazable.</strong></p>
+  <p>API modular y aplicación web para integrar chat, búsqueda RAG y herramientas de administración.</p>
+  <p>
+    <img src="https://img.shields.io/badge/Backend-NestJS-EA2845?logo=nestjs&logoColor=white" alt="Backend NestJS" />
+    <img src="https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react&logoColor=black" alt="Frontend React y Vite" />
+    <img src="https://img.shields.io/badge/Datos-PostgreSQL%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL y pgvector" />
+    <img src="https://img.shields.io/badge/Runtime-Node.js%2020-339933?logo=node.js&logoColor=white" alt="Node.js 20" />
+  </p>
+  <p>
+    <a href="#inicio-rápido">Inicio rápido</a> ·
+    <a href="#capacidades">Capacidades</a> ·
+    <a href="#api">API</a> ·
+    <a href="#desarrollo">Desarrollo</a> ·
+    <a href="#documentación">Documentación</a>
+  </p>
+</div>
 
-ACoreAI Gateway es la base técnica para construir asistentes de IA que puedan
-responder usando el conocimiento privado de una organización.
+ACoreAI Gateway es una plataforma para crear asistentes que respondan con
+información de una organización. Conecta una aplicación con autenticación,
+conversaciones, conocimiento aprobado y un proveedor de modelos configurable.
+Se adapta a cada producto; no es un chatbot configurado para un negocio
+específico.
 
-La idea, explicada de forma sencilla, es esta:
+> La búsqueda normal sólo usa fragmentos asociados a fuentes y versiones
+> publicadas y vigentes. Si no encuentra contexto aprobado, el chat devuelve
+> `no_context` en lugar de responder con conocimiento general.
+
+## Capacidades
+
+| Área | Qué incluye |
+| --- | --- |
+| Chat | Respuestas normales y streaming SSE, conversaciones, historial, títulos y resúmenes. |
+| Autenticación | Usuarios, roles, JWT, sesiones con refresh tokens y dispositivos. |
+| Centro de conocimiento | Conversión de fuentes, versiones, revisión, publicación, auditoría, citas y preguntas sin respuesta. |
+| RAG | Búsqueda semántica con PostgreSQL y pgvector; generación y embeddings mediante Ollama. |
+| Aplicación web | Experiencia de usuario, administración del conocimiento y consola interna de desarrollo. |
+| Servicios adicionales | Traducción, texto a voz, voz a texto, práctica de idiomas, trial y automatizaciones. |
+| Operación | Docker Compose, health checks, logs estructurados y métricas Prometheus. |
+
+## Cómo funciona
 
 ```text
-documento → revisión humana → publicación → búsqueda → respuesta con fuentes
-```
-
-El gateway se encarga de conectar la aplicación, la autenticación, las bases
-de datos, el buscador de conocimiento y el modelo de IA. No es un chatbot
-terminado para un negocio concreto: es una plataforma que se puede adaptar.
-
-## ¿Qué problema resuelve?
-
-Un asistente empresarial no debería responder sólo porque un modelo “recuerda”
-algo. Primero debe buscar información aprobada, respetar permisos y poder
-explicar de dónde salió la respuesta.
-
-ACoreAI organiza ese proceso:
-
-1. Se carga una fuente de conocimiento.
-2. La fuente se convierte en contenido que el sistema puede buscar.
-3. Una persona la revisa y decide si se publica.
-4. El asistente busca sólo contenido aprobado, vigente y permitido.
-5. La respuesta puede mostrar las fuentes que la respaldan.
-
-## ¿Qué incluye hoy?
-
-- API en NestJS y TypeScript estricto.
-- Chat normal y chat por streaming SSE.
-- Usuarios, roles, JWT, refresh tokens y dispositivos.
-- Conversaciones persistentes, títulos, resúmenes e historial.
-- Centro de conocimiento con fuentes, versiones, revisión, publicación,
-  auditoría, citas y preguntas sin respuesta.
-- RAG con PostgreSQL, pgvector y embeddings.
-- Ollama para generar respuestas, clasificar consultas y crear embeddings.
-- Aplicación web React/Vite con área de usuario, administración y consola
-  interna de desarrollo.
-- Servicios opcionales de traducción, texto a voz, voz a texto, idiomas,
-  trial y automatizaciones.
-- Docker Compose, Nginx, health checks, logs JSON y métricas Prometheus.
-
-## Cómo se conectan las piezas
-
-```text
-Aplicación web o producto
-            ↓
+Producto o aplicación
+          ↓
       ACoreAI Gateway
-       ├── PostgreSQL + Prisma + pgvector
+       ├── autenticación, chat y RAG
+       ├── PostgreSQL + pgvector
        ├── MongoDB
        ├── Ollama
-       ├── TTS opcional
-       └── STT opcional
+       └── TTS y STT opcionales
 ```
 
-PostgreSQL guarda la información principal: usuarios, permisos, fuentes,
-publicaciones, conversaciones y auditoría. pgvector permite buscar fragmentos
-parecidos. MongoDB conserva historial caliente y cachés. Ollama genera texto y
-embeddings.
+PostgreSQL conserva los datos principales y los embeddings; MongoDB se usa para
+historial caliente y cachés. La recuperación de conocimiento pasa por el flujo
+de revisión y publicación antes de llegar al chat. Las reglas de negocio viven
+en el dominio y la aplicación, separadas de HTTP, Prisma, MongoDB y Ollama.
 
-## Organización del repositorio
-
-```text
-src/
-├── domain/            reglas de negocio puras
-├── application/       casos de uso, servicios y puertos
-├── infrastructure/    conexión con bases de datos y proveedores
-├── interfaces/http/   controllers, DTOs, guards y filtros
-├── modules/            composición de cada capacidad
-├── config/             validación de configuración del proceso
-└── client/             cliente interno del gateway
-
-web/app/               aplicación web unificada
-services/               servicios opcionales TTS y STT
-prisma/                 schema, migraciones y seeds
-docker/                 imágenes y configuración de infraestructura
-scripts/                desarrollo, pruebas E2E y operación
-test/                   pruebas smoke y E2E
-docs/                   arquitectura, reglas, estado y workflows
-```
-
-El backend sigue una idea importante: las reglas del negocio no deben depender
-directamente de HTTP, Prisma, MongoDB u Ollama. Por eso los controllers usan
-casos de uso o puertos, y los adapters traducen entre la aplicación y cada
-proveedor.
-
-## Regla sobre configuración privada
-
-Las credenciales y la configuración de cada instalación se entregan fuera del
-repositorio, mediante el entorno de ejecución o el sistema de despliegue.
-
-No se crean ni se versionan plantillas, ejemplos, valores o instrucciones de
-configuración privada. Esto evita secretos falsos, configuraciones obsoletas y
-confusión entre desarrollo, pruebas y producción.
-
-## Cómo empezar
+## Inicio rápido
 
 ### Requisitos
 
-- Node.js 20 o superior.
-- pnpm.
-- Docker 24 o superior y Docker Compose v2.
-- Ollama local o un servidor de modelos accesible.
+- Node.js **20.x** y pnpm (la imagen del gateway usa 20.19.5).
+- Docker y Docker Compose v2 para ejecutar el stack completo.
+- Configuración privada suministrada por el entorno de ejecución o despliegue.
 
-### Preparación
+El repositorio no incluye plantillas ni ejemplos para configuración privada.
 
-Primero provisiona la configuración privada fuera del repositorio. Después
-instala las dependencias:
+### Arrancar el stack de desarrollo
+
+Instala las dependencias desde la raíz:
 
 ```bash
 pnpm install
-cd web/app && pnpm install
+```
+
+Instala también las dependencias del cliente web:
+
+```bash
+cd web/app
+pnpm install
 cd ../..
 ```
 
-### Arrancar con Docker
+Levanta la aplicación y sus servicios:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-Direcciones principales:
-
-| Servicio | Dirección |
+| Servicio | Dirección local |
 | --- | --- |
-| Aplicación web | http://localhost:5175 |
-| Administración | http://localhost:5175/admin |
-| Consola interna | http://localhost:5175/admin-dev |
-| Gateway | http://localhost:4005 |
-| Readiness | http://localhost:4005/health/ready |
-| Métricas | http://localhost:4005/metrics |
+| Aplicación web | [http://localhost:5175](http://localhost:5175) |
+| Administración | [http://localhost:5175/admin](http://localhost:5175/admin) |
+| Consola interna | [http://localhost:5175/admin-dev](http://localhost:5175/admin-dev) |
+| API Gateway | [http://localhost:4005](http://localhost:4005) |
+| Readiness | [http://localhost:4005/health/ready](http://localhost:4005/health/ready) |
+| Métricas | [http://localhost:4005/metrics](http://localhost:4005/metrics) |
 
-La consola interna requiere una sesión con rol `ADMIN`.
+La consola interna requiere una sesión con rol `ADMIN`; la administración
+aplica permisos según el rol de la persona.
 
-### Arrancar sin el stack completo
+### Ejecutar los procesos por separado
 
-Si PostgreSQL, MongoDB y Ollama ya están disponibles, puedes ejecutar:
+Si PostgreSQL, MongoDB y el servidor de modelos ya están disponibles, genera el
+cliente de Prisma y aplica las migraciones:
 
 ```bash
 pnpm exec prisma generate
 pnpm exec prisma migrate deploy
+```
+
+Inicia el backend desde la raíz del repositorio:
+
+```bash
 pnpm start:dev
 ```
 
-Para levantar la aplicación web por separado:
+Para iniciar sólo la web, usa otra terminal:
 
 ```bash
-cd web/app && pnpm dev
+cd web/app
+pnpm dev
 ```
 
-## Cómo comprobar los cambios
+## API
 
-El orden recomendado para una tarea es:
+Las rutas de negocio usan el prefijo `/api`. Las rutas de salud y métricas no
+usan ese prefijo.
 
-```bash
-pnpm doctor
-pnpm lint
-pnpm build
-pnpm test
-git diff --check
-```
-
-`pnpm doctor` comprueba que la estructura de gobierno siga completa y que no
-regresen plantillas retiradas. `pnpm lint` revisa frontend y backend. `pnpm
-build` compila ambos paquetes. `pnpm test` ejecuta las pruebas del backend;
-algunas pruebas necesitan PostgreSQL y MongoDB disponibles.
-
-### Prueba E2E
-
-El flujo E2E levanta un entorno aislado, aplica las migraciones, inicia sesión,
-consulta un perfil, envía un mensaje protegido y comprueba la persistencia de
-la conversación:
-
-```bash
-pnpm test:e2e
-```
-
-Para ejecutar la verificación completa dentro de Docker:
-
-```bash
-pnpm verify:docker
-```
-
-Para detener el stack E2E:
-
-```bash
-docker compose --project-name acoreai-e2e -f docker-compose.test.yml down
-```
-
-## API principal
-
-| Área | Ejemplos |
+| Método y ruta | Uso |
 | --- | --- |
-| Chat | `POST /api/chat`, `POST /api/chat/stream` |
-| Conversaciones | `GET /api/conversations`, `DELETE /api/conversations/:id` |
-| Conocimiento | `POST /api/rag/search`, `POST /api/chat/rag` |
-| Autenticación | `POST /api/auth/login`, `POST /api/auth/refresh` |
-| Servicios opcionales | `/api/translate`, `/api/tts`, `/api/stt` |
-| Sistema | `/health/live`, `/health/ready`, `/metrics` |
+| `POST /api/chat` | Envía una consulta al chat. |
+| `POST /api/chat/stream` | Recibe la respuesta del chat mediante SSE. |
+| `POST /api/chat/rag` | Consulta el chat con conocimiento publicado y vigente. |
+| `POST /api/rag/search` | Busca contexto RAG; requiere los controles de acceso de administración. |
+| `GET /api/conversations` | Lista conversaciones disponibles para la sesión. |
+| `POST /api/auth/login` · `POST /api/auth/refresh` | Inicia sesión y renueva una sesión. |
+| `POST /api/translate` · `POST /api/tts` · `POST /api/stt` | Traducción, síntesis de voz y transcripción opcionales. |
+| `GET /health/live` · `GET /health/ready` | Comprueba disponibilidad y readiness. |
+| `GET /metrics` | Expone métricas Prometheus. |
 
-Las rutas protegidas validan autenticación, autorización y las claves internas
-que correspondan. Las claves privadas nunca deben llegar al bundle público del
-frontend ni aparecer en logs, pruebas o documentación.
+Las rutas de negocio aplican autenticación y autorización según el flujo. Las
+claves privadas se mantienen en el servidor y no deben llegar al bundle del
+frontend ni a logs o documentación.
 
-## Reglas de seguridad y operación
+## Desarrollo
 
-- Usa credenciales únicas para cada instalación y rótalas periódicamente.
-- Mantén el contenido no aprobado, vencido o sin permiso fuera de la búsqueda.
-- Publica el gateway detrás de HTTPS y limita las redes de las bases de datos.
-- Conserva logs, métricas y auditoría: sirven para entender qué ocurrió.
-- No elimines volúmenes Docker salvo que quieras borrar esos datos de forma
-  intencional.
-- Revisa los casos negativos de permisos, publicación y acceso antes de cerrar
-  un cambio.
+Los comandos se ejecutan desde la raíz, salvo que se indique otra carpeta.
 
-## Documentación para agentes y equipo
+| Comando | Resultado |
+| --- | --- |
+| `pnpm doctor` | Revisa la estructura documental y referencias retiradas. |
+| `pnpm lint` | Revisa el cliente web y comprueba TypeScript del backend. |
+| `pnpm build` | Compila backend y frontend. |
+| `pnpm test` | Ejecuta las pruebas del backend. |
+| `pnpm test:e2e` | Ejecuta el flujo E2E con Docker. |
+| `pnpm verify:docker` | Ejecuta la verificación de calidad dentro de Docker. |
 
-- [AGENTS.md](AGENTS.md): punto de entrada para agentes.
-- [CLAUDE.md](CLAUDE.md): adaptador para Claude Code.
-- [docs/README.md](docs/README.md): índice de documentación.
-- [docs/ai/PROJECT_STATE.md](docs/ai/PROJECT_STATE.md): estado corto del
-  proyecto.
-- [docs/ai/workflows/](docs/ai/workflows/): pasos por tipo de cambio.
-- [docs/ai/agents/](docs/ai/agents/): responsabilidades de los roles.
-- [docs/DECISIONS.md](docs/DECISIONS.md): decisiones importantes.
-- [docs/BACKLOG.md](docs/BACKLOG.md): siguientes prioridades.
+El [workflow de CI](.github/workflows/ci.yml) ejecuta doctor, lint, build,
+migraciones y las pruebas smoke y HTTP E2E en pull requests y cambios a `main`.
 
-## Siguientes planes
+Las pruebas que usan la aplicación requieren la configuración de runtime y los
+servicios externos correspondientes. El E2E y la verificación Docker también
+requieren Docker disponible.
 
-El trabajo futuro, su estado real, las dependencias y los criterios de
-aceptación viven en el [backlog priorizado](docs/BACKLOG.md). `BL-01` ya tiene
-mitigación parcial aplicada; el bloque activo es `BL-02`, que termina de
-unificar los pipelines de chat y su streaming.
+## Estructura del repositorio
+
+```text
+src/
+├── domain/            reglas de negocio
+├── application/       casos de uso, servicios y puertos
+├── infrastructure/    persistencia y proveedores externos
+├── interfaces/http/   controllers, DTOs, guards y filtros
+├── modules/           composición por capacidad
+├── config/            lectura y validación del runtime
+└── client/            cliente interno del gateway
+
+web/app/               aplicación React + Vite
+docker/                imágenes y configuración de infraestructura
+prisma/                schema, migraciones y seeds
+services/              servicios opcionales TTS y STT
+test/                  pruebas smoke y E2E
+docs/                  arquitectura, reglas, estado y workflows
+```
+
+## Documentación
+
+| Documento | Contenido |
+| --- | --- |
+| [Arquitectura](docs/ARCHITECTURE.md) | Límites de módulos y flujos de chat y RAG. |
+| [Reglas del proyecto](docs/RULES.md) | Invariantes, configuración privada y límites de cambios. |
+| [Decisiones](docs/DECISIONS.md) | Decisiones técnicas y su contexto. |
+| [Riesgos](docs/RISKS.md) | Riesgos abiertos y mitigaciones. |
+| [Backlog](docs/BACKLOG.md) | Prioridades y criterios de aceptación. |
+| [Estado operativo](docs/ai/PROJECT_STATE.md) | Resumen del estado actual del producto. |
+| [AGENTS.md](AGENTS.md) | Entrada e instrucciones para agentes del repositorio. |
+
+## Seguridad y operación
+
+- Mantén las fuentes pendientes de revisión, vencidas o archivadas fuera de la búsqueda normal.
+- Publica el gateway detrás de HTTPS y limita el acceso a bases de datos y servicios internos.
+- La configuración privada se entrega desde el entorno de ejecución o despliegue; no se versiona en el repositorio.
+- Revisa permisos, publicación y acceso en los cambios que afecten conocimiento o autenticación.

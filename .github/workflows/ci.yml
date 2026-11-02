@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-tests:
+    name: Quality and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NODE_ENV: test
+      LOG_LEVEL: silent
+      DATABASE_URL: postgresql://postgres@127.0.0.1:5438/acoreai_ai_test?schema=public
+      MONGODB_URI: mongodb://127.0.0.1:27018/acoreai_ai_gateway_test
+      MONGODB_DB: acoreai_ai_gateway_test
+      MODEL_SERVER_URL: http://127.0.0.1:11434
+      OLLAMA_EMBEDDING_MODEL: ci-test-embedding
+      JWT_ISSUER: acoreai-ci
+      JWT_AUDIENCE: acoreai-ci
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.0-pg16
+        env:
+          POSTGRES_DB: acoreai_ai_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5438:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d acoreai_ai_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27018:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval \"db.adminCommand('ping').ok\""
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 10s
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10.34.9
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20.19.5
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Generate temporary test keys
+        shell: bash
+        run: |
+          printf 'AI_GATEWAY_KEY=%s\n' "$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          printf 'JWT_SECRET=%s\n' "$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check repository documentation
+        run: pnpm doctor
+
+      - name: Lint and typecheck
+        run: pnpm lint
+
+      - name: Build backend and web app
+        run: pnpm build
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Apply database migrations
+        run: pnpm exec prisma migrate deploy
+
+      - name: Run smoke and HTTP E2E tests
+        run: pnpm test
