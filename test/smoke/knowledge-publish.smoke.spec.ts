@@ -197,8 +197,13 @@ describe('Knowledge publish smoke (contrato published-only)', () => {
     expect(sourceIds).not.toContain(restrictedSourceId);
   });
 
-  it('keeps the legacy RAG adapter on the supervised published-only search', async () => {
-    const results = await legacyRagService.searchContext('contenido fixture', 'smoke-test-user');
+  it('keeps the legacy RAG adapter on supervised search and forwards scope filters', async () => {
+    const results = await legacyRagService.searchContext(
+      'contenido fixture',
+      'smoke-test-user',
+      'smoke-test-area',
+      'es',
+    );
     const sourceIds = results.chunks.map((chunk) => chunk.documentId);
 
     expect(sourceIds).not.toContain(expiredSourceId);
